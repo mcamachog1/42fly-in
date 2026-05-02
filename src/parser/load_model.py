@@ -12,10 +12,37 @@ def parse_map(filename: str) -> tuple[Any, Any, Any]:
     raw_data: dict[str, Any] = read_map(filename)
     nb_drones: int = raw_data['nb_drones']
 
+    # Drone numbers
     try:
-        map = Map(nb_drones=nb_drones)
+        obj_map = Map(nb_drones=nb_drones)
     except ValidationError:
         print(f"RESPONSE: Invalid value: {nb_drones}", file=sys.stderr)
         exit(1)
 
-    return map, None, None
+    # Hubs
+    raw_start_hub: tuple[str]= raw_data['start_hub'].split()
+    if len(raw_start_hub) > 4:
+        print(f"RESPONSE: To many arguments for start_hub: {raw_data['start_hub']}", file=sys.stderr)
+        exit(1)
+    if len(raw_start_hub) < 3:
+        print(f"RESPONSE: To few arguments for start_hub: {raw_data['start_hub']}", file=sys.stderr)
+        exit(1)
+    if len(raw_start_hub) == 3:
+        hub_name, coord_x, coord_y = raw_start_hub
+        hub_optionals: list[str] = None
+    if len(raw_start_hub) == 4:
+        hub_name, coord_x, coord_y, hub_optionals = raw_start_hub
+    try:
+        start_hub = Hub(name=hub_name, coord_x=int(coord_x), coord_y=int(coord_y), optionals=hub_optionals)
+    except ValidationError as e:
+        for error in e.errors():
+            field = error['loc'][0]
+            msg = error['msg']
+            input_value = error['input']
+            print(f"RESPONSE: Error in field '{field}': {msg}, input value: {input_value}")
+        exit(1)
+    except ValueError:
+        print(f"RESPONSE: coordinates x and y must be integer, coord_x={coord_x}, coord_y={coord_y}", file=sys.stderr)
+        exit(1)
+            
+    return obj_map, start_hub, None

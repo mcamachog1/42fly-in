@@ -1,4 +1,7 @@
+
 import sys
+from typing import Optional
+
 try:
     from pydantic import BaseModel, Field, ValidationError
 except Exception as e:
@@ -6,7 +9,10 @@ except Exception as e:
     sys.exit()
 
 class Hub(BaseModel):
-    name: str = Field(ge=1, le=10)
+    name: str = Field(min_length=1, max_length=10)
+    coord_x: int
+    coord_y: int
+    optionals: Optional[str] = Field(default=None) 
 
 class Map(BaseModel):
     nb_drones: int = Field(ge=1, le=10)
@@ -17,4 +23,4 @@ class Map(BaseModel):
 
 
 class Connection(BaseModel):
-    name: str = Field(ge=1, le=10)
+    name: str = Field(min_length=1, max_length=10)
