@@ -1,4 +1,4 @@
-# hub incorrect parameters
+# hub with wrong parameters
 nb_drones: 2
 
 start_hub: start 0  [color=green]

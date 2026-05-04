@@ -9,8 +9,12 @@ from pydantic import ValidationError
 
 
 def parse_map(filename: str) -> tuple[Any, Any, Any]:
-    raw_data: dict[str, Any] = read_map(filename)
-    nb_drones: int = raw_data['nb_drones']
+    raw_data: list[tuple[str, str]] = read_map(filename)
+    for line in raw_data
+    print(raw_data)
+    exit(0)
+    #nb_drones: int = raw_data['nb_drones']
+    nb_drones = 2
 
     # Drone numbers
     try:
