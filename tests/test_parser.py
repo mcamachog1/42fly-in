@@ -9,9 +9,9 @@ MAP_1 = 'data/maps/easy/01_linear_path.txt'
 
 def main() -> None:
     file_name: str = MAP_1
-    config: dict[str, Any] = read_map(file_name)
-    for key, value in config.items():
-        print(f"{key}: {value}")
+    lines: list[tuple[str, str]] = read_map(file_name)
+    for line in lines:
+        print(line)
 
 
 if __name__ == "__main__":

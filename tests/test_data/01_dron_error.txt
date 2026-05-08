@@ -1,5 +1,8 @@
 # dron with wrong parameters
 nb_drones: 12
+#nb_drones: -12
+#nb_drones: 1 2
+#nb_drones: banana
 
 start_hub: start 0 0 [color=green]
 hub: waypoint1 1 0 [color=blue]
