@@ -8,15 +8,11 @@ from src.parser.read_map import read_map
 from pydantic import ValidationError
 
 
-def parse(filename: str) -> dict[Any, Any]:
-    raw_data = read_map(filename)
-    return {'id':1, 'data': raw_data}
-
 def parse_map(filename: str) -> tuple[Any, Any, Any]:
     raw_data: list[tuple[str, str]] = read_map(filename)
-    for line in raw_data:
-        print(raw_data)
-        exit(0)
+    for line in raw_data
+    print(raw_data)
+    exit(0)
     #nb_drones: int = raw_data['nb_drones']
     nb_drones = 2
 
