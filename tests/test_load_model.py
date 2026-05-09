@@ -12,9 +12,10 @@ MAP03  = 'tests/test_data/03_load_ok.txt'
 MAP04  = 'tests/test_data/04_config_key_error.txt'
 MAP05  = 'tests/test_data/05_duplicate_key_error.txt'
 MAP06  = 'tests/test_data/06_config_separator_error.txt'
+MAP07 = 'data/maps/challenger/01_the_impossible_dream.txt'
 
-def test_06() -> dict[str, Any]:
-    filename: str = MAP06
+def test_07() -> dict[str, Any]:
+    filename: str = MAP07
     return parse_map(filename)
 
 def test_05() -> dict[str, Any]:
@@ -42,6 +43,6 @@ if __name__ == "__main__":
     #test_06()
     # test_05()
     # test_04()
-    test_03()    
     # test_02()
-    # test_01()    
+    # print(test_01())
+    print(test_07())

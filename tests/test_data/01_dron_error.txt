@@ -1,6 +1,6 @@
 # dron with wrong parameters
-nb_drones: 12
-#nb_drones: -12
+#nb_drones: 12
+nb_drones: -12
 #nb_drones: 1 2
 #nb_drones: banana
 
