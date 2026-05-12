@@ -3,7 +3,7 @@
 
 
 from typing import Any
-from src.parser.load_model import parse_map, load_map
+from src.parser.load_model import parse_map
 
 
 MAP01 = 'tests/test_data/01_dron_error.txt'
@@ -32,7 +32,7 @@ def test_03() -> dict[str, Any]:
 
 def test_02() -> dict[str, Any]:
     filename: str = MAP02
-    return load_map(parse_map(filename))
+    return parse_map(filename)
 
 def test_01() -> dict[str, Any]:
     filename: str = MAP01
@@ -45,4 +45,4 @@ if __name__ == "__main__":
     # test_04()
     # test_02()
     # print(test_01())
-    test_02()
+    print(test_02())

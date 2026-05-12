@@ -1,8 +1,8 @@
 # load ok
-nb_drones: 5
 
+nb_drones: 0
 start_hub: start 0 0 [color=red max_drones=1]
-hub: waypoint1 1 0 [color=blue]
+hub: waypoint1 1 -1 [color=blue]
 hub: waypoint2 2 0 [color=blue]
 end_hub: goal 3 0 [color=red]
 
