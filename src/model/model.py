@@ -20,16 +20,61 @@ class HubPrefix(Enum):
     END = 'end_hub'
 
 
+class ZoneType(Enum):
+    NORMAL = 'normal'
+    BLOCKED = 'blocked'
+    RESTRICTED = 'restricted'
+    PRIORITY = 'priority'
+
+    def get_cost(self) -> int:
+        costs = {
+            ZoneType.NORMAL: 1,
+            ZoneType.RESTRICTED: 2,
+            ZoneType.PRIORITY: 1
+        }
+        return costs.get(self, 1)
+
+class Color(Enum):
+    RED = 'red'
+    GREEN = 'green'
+    BLUE = 'blue'
+    YELLOW = 'yellow'
+    BLACK = 'black'
+    WHITE = 'white'
+    GRAY = 'gray'
+    DEFAULT = 'default'
+
+    def get_color(self) -> str:
+        cls = type(self)
+        colors = {
+            cls.RED: '\033[31m',
+            cls.GREEN: '\033[32m'
+            cls.BLUE: = '\033[34m'
+            cls.YELLOW: = '\033[43m'
+            cls.BLACK: ='\033[40m'
+            cls.WHITE = '\033[47m'
+            cls.GRAY = '\033[100m'
+            cls.DEFAULT = '\033[0m'
+            # BG colors begin with 4 or 10
+            # TEXT colors begin with 3 or 9                      
+        }
+        return colors.get(self, '\033[0m')
+
+
 class Hub(BaseModel):
     prefix: HubPrefix
     name: str = Field(min_length=1, max_length=20)
     x: int
     y: int
+    zone_type: ZoneType = Field(default=ZoneType.NORMAL)
+    color: Color = Field(default=Color.DEFAULT)
+    max_drones: int = Field(ge=1, default=1)
     metadata: Optional[dict[str, str]] = Field(default=None)
 
 
 class Connection(BaseModel):
     name: str = Field(min_length=1, max_length=20)
+    max_link_capacity: int = Field(ge=1, default=1)    
     metadata: Optional[dict[str, str]] = Field(default=None)
 
 
