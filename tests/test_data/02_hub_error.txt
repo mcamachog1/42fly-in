@@ -1,12 +1,11 @@
 # hub with wrong parameters
 nb_drones: 2
 
-start_hub: start 0 0  [color=green]
+start_hub: start 0 0  [color=green max_drones=4]
 hub: waypoint1 1 0 [color=blue]
-hub: waypoint2 1 -1 [color=blue]
+hub: waypoint2 1 -1 [color=purple]
 end_hub: goal 3 0 [color=red]
 
 connection: start-waypoint1
 connection: waypoint1-waypoint2
-connection: waypoint2-waypoint1
-connection: waypoint2-goal [color=red]
+connection: waypoint2-goal [color=purple max_link_capacity=3]

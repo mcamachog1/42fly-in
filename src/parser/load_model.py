@@ -1,6 +1,6 @@
 # load_model.py
 
-
+import re
 from typing import Any
 from src.model.model import Hub, Connection, Map
 from src.parser.read_map import read_map
@@ -30,12 +30,21 @@ def get_numbers_of_drones(lines: list[tuple[str, str]]) -> int:
 
 
 def get_metadata(string: str) -> dict[str, str]:
-    if string == "":
-        return {}
-    optionals: list[str] = string.strip("[]").split()
+    valid_keys = {'zone', 'color', 'max_drones', 'max_link_capacity'}
+    valid_colors = {'red', 'green', 'blue', 'yellow', 'black', 'white', 'gray'}
     result: dict[str, str] = {}
+    if string == "":
+        return result
+    pattern = r"\[([a-z_0-9]+=[a-z_0-9]+\s*)*\]"
+    if not re.search(pattern, string):
+        raise MapParsingError(f"Invalid format for metadata '{string}'")
+    optionals: list[str] = string.strip("[]").split()
     for values in optionals:
         key, value = values.split("=")
+        if key not in valid_keys:
+            raise MapParsingError(f"Invalid key '{key}' for metadata '{string}'")
+        if key == 'color' and value not in valid_colors:
+            value = 'default'
         result[key] = value
     return result
 
@@ -79,13 +88,17 @@ def get_zones(zones: list[tuple[str, str]]) -> list[dict[str, Any]]:
                 f"{hub}, name: {name}, x: {coord_x}, y: {coord_y}, "
                 f"metadata: {metadata}"
             )
+        
+        parsed_metadata: dict[str, str] = get_metadata(metadata)
         results.append(
             {
                 'prefix': hub,
                 'name': name,
                 'x': x,
                 'y': y,
-                'metadata': get_metadata(metadata)
+                'zone_type': parsed_metadata.get('zone', 'normal'),
+                'color': parsed_metadata.get('color', None),
+                'max_drones': parsed_metadata.get('max_drones', 1),                
             }
         )
     return results
@@ -117,11 +130,12 @@ def get_connections(
                 f"Invalid name for connection: '{name}' "
                 "expected: <zone1>-<zone2>"
             )
+        parsed_metadata: dict[str, str] = get_metadata(metadata)        
         results.append(
             {
                 'prefix': connection,
                 'name': name,
-                'metadata': get_metadata(metadata)
+                'max_link_capacity': parsed_metadata.get('max_link_capacity', 1),
             }
         )
     return results
@@ -177,7 +191,6 @@ def load_map(network: dict[str, Any]) -> None:
 
     # Format input for connections objects
     connections: list[dict[str, Any]] = network['connections']
-    print(connections)
     connection_objects: list[Connection] = []
     for connection in connections:
         connection_objects.append(Connection(**connection))

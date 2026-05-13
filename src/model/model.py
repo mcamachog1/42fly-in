@@ -1,3 +1,4 @@
+# model.py
 
 from enum import Enum
 from typing import Optional
@@ -48,13 +49,13 @@ class Color(Enum):
         cls = type(self)
         colors = {
             cls.RED: '\033[31m',
-            cls.GREEN: '\033[32m'
-            cls.BLUE: = '\033[34m'
-            cls.YELLOW: = '\033[43m'
-            cls.BLACK: ='\033[40m'
-            cls.WHITE = '\033[47m'
-            cls.GRAY = '\033[100m'
-            cls.DEFAULT = '\033[0m'
+            cls.GREEN: '\033[32m',
+            cls.BLUE: '\033[34m',
+            cls.YELLOW: '\033[43m',
+            cls.BLACK: '\033[40m',
+            cls.WHITE: '\033[47m',
+            cls.GRAY: '\033[100m',
+            cls.DEFAULT: '\033[0m',
             # BG colors begin with 4 or 10
             # TEXT colors begin with 3 or 9                      
         }
@@ -69,14 +70,15 @@ class Hub(BaseModel):
     zone_type: ZoneType = Field(default=ZoneType.NORMAL)
     color: Color = Field(default=Color.DEFAULT)
     max_drones: int = Field(ge=1, default=1)
-    metadata: Optional[dict[str, str]] = Field(default=None)
 
 
 class Connection(BaseModel):
     name: str = Field(min_length=1, max_length=20)
     max_link_capacity: int = Field(ge=1, default=1)    
-    metadata: Optional[dict[str, str]] = Field(default=None)
 
+
+class Drone(BaseModel):
+    pass
 
 class Map(BaseModel):
     nb_drones: int = Field(ge=1, le=50)
@@ -84,6 +86,7 @@ class Map(BaseModel):
     hubs: list[Hub]
     end_hub: Hub
     connections: list[Connection]
+    drone_position: list[str] = []
 
     @model_validator(mode='after')
     def validate_hub_names(self) -> Self:
@@ -125,3 +128,5 @@ class Map(BaseModel):
                 raise ValueError(f"Invalid connection: '{connection.name}'")
             used_connections.add(connection.name)
         return self
+    
+
