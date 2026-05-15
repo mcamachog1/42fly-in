@@ -3,6 +3,7 @@
 import re
 from typing import Any
 from src.parser.read_map import read_map
+from src.model.model import Hub, Connection, Color
 
 
 
@@ -29,8 +30,8 @@ def get_numbers_of_drones(lines: list[tuple[str, str]]) -> int:
 
 
 def get_metadata(string: str) -> dict[str, str]:
-    valid_keys = {'zone', 'color', 'max_drones', 'max_link_capacity'}
-    valid_colors = {'red', 'green', 'blue', 'yellow', 'black', 'white', 'gray'}
+    valid_keys = Hub.META_DATA_KEYS | Connection.META_DATA_KEYS
+    valid_colors = {c.value for c in Color}
     result: dict[str, str] = {}
     if string == "":
         return result
@@ -38,11 +39,14 @@ def get_metadata(string: str) -> dict[str, str]:
     if not re.search(pattern, string):
         raise MapParsingError(f"Invalid format for metadata '{string}'")
     optionals: list[str] = string.strip("[]").split()
+    pattern_color = r"^[a-z]{3,8}$"
     for values in optionals:
         key, value = values.split("=")
         if key not in valid_keys:
             raise MapParsingError(f"Invalid key '{key}' for metadata '{string}'")
         if key == 'color' and value not in valid_colors:
+            if not re.search(pattern_color, value):
+                raise MapParsingError(f"Invalid color for metadata '{string}'")
             value = 'default'
         result[key] = value
     return result

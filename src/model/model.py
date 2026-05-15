@@ -1,7 +1,7 @@
 # model.py
 
 from enum import Enum
-from typing import Optional
+from typing import ClassVar
 from typing_extensions import Self
 
 try:
@@ -63,6 +63,7 @@ class Color(Enum):
 
 
 class Hub(BaseModel):
+    META_DATA_KEYS: ClassVar[set[str]] = {'zone', 'color', 'max_drones'}
     prefix: HubPrefix
     name: str = Field(min_length=1, max_length=20)
     x: int
@@ -73,6 +74,7 @@ class Hub(BaseModel):
 
 
 class Connection(BaseModel):
+    META_DATA_KEYS: ClassVar[set[str]] = {'max_link_capacity'}    
     name: str = Field(min_length=1, max_length=20)
     max_link_capacity: int = Field(ge=1, default=1)    
 

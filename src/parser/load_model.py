@@ -4,7 +4,7 @@ from src.model.model import Hub, Connection, Map
 from pydantic import ValidationError
 from typing import Any
 
-def load_map(network: dict[str, Any]) -> None:
+def load_map(network: dict[str, Any]) -> Map:
     # Format input for zone objects
     zones: list[dict[str, Any]] = network['zones']
     hubs: list[Hub] = []
@@ -30,10 +30,10 @@ def load_map(network: dict[str, Any]) -> None:
     map_input['connections'] = connection_objects
     try:
         fly_map = Map(**map_input)
-        print(fly_map)
     except ValidationError as e:
         for error in e.errors():
             print(
                 "CONSTRAINT ERROR: "
                 f"{error['msg'].removeprefix('Value error, ')}"
             )
+    return fly_map
