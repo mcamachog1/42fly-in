@@ -67,7 +67,7 @@ class Hub(BaseModel):
     name: str = Field(min_length=1, max_length=20)
     x: int
     y: int
-    zone_type: ZoneType = Field(default=ZoneType.NORMAL)
+    zone: ZoneType = Field(default=ZoneType.NORMAL)
     color: Color = Field(default=Color.DEFAULT)
     max_drones: int = Field(ge=1, default=1)
 
@@ -78,7 +78,10 @@ class Connection(BaseModel):
 
 
 class Drone(BaseModel):
-    pass
+    id: int = Field(ge=1)
+    current_zone: Hub
+    next_zone: Hub
+
 
 class Map(BaseModel):
     nb_drones: int = Field(ge=1, le=50)

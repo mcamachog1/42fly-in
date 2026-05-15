@@ -3,7 +3,8 @@
 
 
 from typing import Any
-from src.parser.load_model import parse_map, load_map
+from src.parser.parse_map import parse_map
+from src.parser.load_model import load_map
 
 
 MAP01 = 'tests/test_data/01_dron_error.txt'
