@@ -1,4 +1,4 @@
-import turtle as t
+from turtle import Turtle
 from random import random
 from math import sqrt
 
@@ -7,6 +7,8 @@ from src.model.model import Map, Connection, Hub, Drone
 RADIO: int = 20
 
 def draw_hubs(hubs: list[Hub]) -> None:
+    t = Turtle()
+    t.screen.setup(width=0.25, height=0.5, startx=None, starty=None)
     coords: list[tuple[int, int]] = []
     for hub in hubs:
         coord = (hub.x * 150, hub.y * 150)
@@ -16,7 +18,7 @@ def draw_hubs(hubs: list[Hub]) -> None:
         t.setpos(c)
         t.down()
         t.circle(RADIO)     
-    t.mainloop()
+    t.screen.mainloop()
 
 def hubs_distance(h1: tuple[int,int], h2: tuple[int, int]) -> float:
     x1, y1 = h1

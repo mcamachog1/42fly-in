@@ -1,4 +1,4 @@
-.PHONY: clean files
+.PHONY: clean files install unit_tests
 
 VENV := venv
 PYTHON := $(VENV)/bin/python3
@@ -11,7 +11,7 @@ install:
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
 
-tests:
+unit_tests:
 	$(PYTHON) -m tests.test_load_model
 
 clean:
