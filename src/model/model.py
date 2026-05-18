@@ -1,7 +1,7 @@
 # model.py
 
 from enum import Enum
-from typing import ClassVar
+from typing import ClassVar, Optional
 from typing_extensions import Self
 
 try:
@@ -43,23 +43,7 @@ class Color(Enum):
     BLACK = 'black'
     WHITE = 'white'
     GRAY = 'gray'
-    DEFAULT = 'default'
-
-    def get_color(self) -> str:
-        cls = type(self)
-        colors = {
-            cls.RED: '\033[31m',
-            cls.GREEN: '\033[32m',
-            cls.BLUE: '\033[34m',
-            cls.YELLOW: '\033[43m',
-            cls.BLACK: '\033[40m',
-            cls.WHITE: '\033[47m',
-            cls.GRAY: '\033[100m',
-            cls.DEFAULT: '\033[0m',
-            # BG colors begin with 4 or 10
-            # TEXT colors begin with 3 or 9                      
-        }
-        return colors.get(self, '\033[0m')
+    ORANGE = 'orange'    
 
 
 class Hub(BaseModel):
@@ -69,20 +53,23 @@ class Hub(BaseModel):
     x: int
     y: int
     zone: ZoneType = Field(default=ZoneType.NORMAL)
-    color: Color = Field(default=Color.DEFAULT)
+    color: Color = Field(default=Color.WHITE)
     max_drones: int = Field(ge=1, default=1)
+    num_drones: int
 
 
 class Connection(BaseModel):
     META_DATA_KEYS: ClassVar[set[str]] = {'max_link_capacity'}    
-    name: str = Field(min_length=1, max_length=20)
+    name: str = Field(min_length=1, max_length=50)
     max_link_capacity: int = Field(ge=1, default=1)    
 
 
 class Drone(BaseModel):
     id: int = Field(ge=1)
-    current_zone: Hub
-    next_zone: Hub
+    current_zone: None | Hub = None
+    next_zone: None | Hub = None
+    waiting_to_start: bool = True
+    travel_done: bool = False
 
 
 class Map(BaseModel):

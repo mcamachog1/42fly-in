@@ -29,8 +29,7 @@ def get_numbers_of_drones(lines: list[tuple[str, str]]) -> int:
         )
 
 
-def get_metadata(string: str) -> dict[str, str]:
-    valid_keys = Hub.META_DATA_KEYS | Connection.META_DATA_KEYS
+def get_metadata(string: str, prefix: str) -> dict[str, str]:
     valid_colors = {c.value for c in Color}
     result: dict[str, str] = {}
     if string == "":
@@ -42,12 +41,14 @@ def get_metadata(string: str) -> dict[str, str]:
     pattern_color = r"^[a-z]{3,8}$"
     for values in optionals:
         key, value = values.split("=")
-        if key not in valid_keys:
-            raise MapParsingError(f"Invalid key '{key}' for metadata '{string}'")
+        if prefix.lower() == 'hub' and key not in Hub.META_DATA_KEYS:
+            raise MapParsingError(f"Invalid key '{key}' for hub metadata '{string}'")            
+        if prefix.lower() == 'connection' and key not in Connection.META_DATA_KEYS:
+            raise MapParsingError(f"Invalid key '{key}' for connection metadata '{string}'")            
         if key == 'color' and value not in valid_colors:
             if not re.search(pattern_color, value):
                 raise MapParsingError(f"Invalid color for metadata '{string}'")
-            value = 'default'
+            value = 'white'
         result[key] = value
     return result
 
@@ -91,8 +92,7 @@ def get_zones(zones: list[tuple[str, str]]) -> list[dict[str, Any]]:
                 f"{hub}, name: {name}, x: {coord_x}, y: {coord_y}, "
                 f"metadata: {metadata}"
             )
-        
-        parsed_metadata: dict[str, str] = get_metadata(metadata)
+        parsed_metadata: dict[str, str] = get_metadata(metadata, 'hub')
         results.append(
             {
                 'prefix': hub,
@@ -100,7 +100,7 @@ def get_zones(zones: list[tuple[str, str]]) -> list[dict[str, Any]]:
                 'x': x,
                 'y': y,
                 'zone_type': parsed_metadata.get('zone', 'normal'),
-                'color': parsed_metadata.get('color', None),
+                'color': parsed_metadata.get('color', 'white'),
                 'max_drones': parsed_metadata.get('max_drones', 1),                
             }
         )
@@ -133,7 +133,7 @@ def get_connections(
                 f"Invalid name for connection: '{name}' "
                 "expected: <zone1>-<zone2>"
             )
-        parsed_metadata: dict[str, str] = get_metadata(metadata)        
+        parsed_metadata: dict[str, str] = get_metadata(metadata, 'connection')        
         results.append(
             {
                 'prefix': connection,

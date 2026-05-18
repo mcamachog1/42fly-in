@@ -36,4 +36,5 @@ def load_map(network: dict[str, Any]) -> Map:
                 "CONSTRAINT ERROR: "
                 f"{error['msg'].removeprefix('Value error, ')}"
             )
+            exit(1)
     return fly_map
