@@ -1,4 +1,4 @@
-.PHONY: clean files install unit_tests
+.PHONY: clean files install unit_tests activate
 
 VENV := venv
 PYTHON := $(VENV)/bin/python3
@@ -14,9 +14,11 @@ install:
 unit_tests:
 	$(PYTHON) -m tests.test_load_model
 
+fly:
+	$(PYTHON) -m src.engine.main
+    
 clean:
 	@find . -name "__pycache__" -type d -exec rm -rf {} +
 
 files:
 	@find . \( -path "./venv" -o -name ".?*" \) -prune -o -print
-    

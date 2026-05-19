@@ -43,7 +43,25 @@ class Color(Enum):
     BLACK = 'black'
     WHITE = 'white'
     GRAY = 'gray'
-    ORANGE = 'orange'    
+    ORANGE = 'orange'
+    RESET = '\033[0m'    
+
+    def get_color(self) -> str:
+        cls = type(self)
+        colors = {
+            cls.RED: '\033[31m',
+            cls.GREEN: '\033[32m',
+            cls.BLUE: '\033[34m',
+            cls.YELLOW: '\033[43m',
+            cls.BLACK: '\033[40m',
+            cls.WHITE: '\033[47m',
+            cls.GRAY: '\033[100m',
+            cls.ORANGE: '\033[38;5;208m',
+            cls.RESET: '\033[0m'
+            # BG colors begin with 4 or 10
+            # TEXT colors begin with 3 or 9                      
+        }
+        return colors.get(self, cls.RESET)    
 
 
 class Hub(BaseModel):
@@ -55,7 +73,7 @@ class Hub(BaseModel):
     zone: ZoneType = Field(default=ZoneType.NORMAL)
     color: Color = Field(default=Color.WHITE)
     max_drones: int = Field(ge=1, default=1)
-    num_drones: int
+    num_drones: int = 0
 
 
 class Connection(BaseModel):
@@ -66,10 +84,9 @@ class Connection(BaseModel):
 
 class Drone(BaseModel):
     id: int = Field(ge=1)
-    current_zone: None | Hub = None
-    next_zone: None | Hub = None
-    waiting_to_start: bool = True
-    travel_done: bool = False
+    current_zone: Hub
+    next_zone: Hub
+    current_connection: None | Connection = None
 
 
 class Map(BaseModel):
@@ -78,7 +95,8 @@ class Map(BaseModel):
     hubs: list[Hub]
     end_hub: Hub
     connections: list[Connection]
-    drone_position: list[str] = []
+    drones: list[Drone] = []
+
 
     @model_validator(mode='after')
     def validate_hub_names(self) -> Self:
