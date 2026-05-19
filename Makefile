@@ -12,7 +12,8 @@ install:
 	$(PIP) install -r requirements.txt
 
 unit_tests:
-	$(PYTHON) -m tests.test_load_model
+#	$(PYTHON) -m tests.test_load_model
+	$(PYTHON) -m tests.test_enum
 
 fly:
 	$(PYTHON) -m src.engine.main

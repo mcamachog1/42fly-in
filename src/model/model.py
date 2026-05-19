@@ -31,7 +31,8 @@ class ZoneType(Enum):
         costs = {
             ZoneType.NORMAL: 1,
             ZoneType.RESTRICTED: 2,
-            ZoneType.PRIORITY: 1
+            ZoneType.PRIORITY: 1,
+            ZoneType.BLOCKED: float('inf'),       
         }
         return costs.get(self, 1)
 
@@ -61,7 +62,7 @@ class Color(Enum):
             # BG colors begin with 4 or 10
             # TEXT colors begin with 3 or 9                      
         }
-        return colors.get(self, cls.RESET)    
+        return colors.get(self, '\033[0m')    
 
 
 class Hub(BaseModel):
@@ -87,6 +88,8 @@ class Drone(BaseModel):
     current_zone: Hub
     next_zone: Hub
     current_connection: None | Connection = None
+    path: list[Hub] = []
+    cost: int = 0
 
 
 class Map(BaseModel):
@@ -109,6 +112,13 @@ class Map(BaseModel):
                     f"zone name: '{hub.name}' can not contain symbol '-'"
                 )
             used_names.add(hub.name)
+        return self
+
+    @model_validator(mode='after')
+    def validate_start_end_max_drones(self) -> Self:
+        for hub in self.hubs:
+            if hub.prefix.name == HubPrefix.START or hub.prefix.name == HubPrefix.END:
+                hub.max_drones = int('inf')
         return self
 
     @model_validator(mode='after')
