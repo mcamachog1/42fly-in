@@ -20,8 +20,8 @@ MAP02 = 'data/maps/easy/01_linear_path.txt'
 def test_02() -> None:
     filename: str = MAP02
     my_map: Map = load_map(parse_map(filename))
-    print(my_map.hubs)
-    print(my_map.connections)
+    #print(my_map.hubs)
+    #print(my_map.connections)
     draw_map(my_map)
 
 

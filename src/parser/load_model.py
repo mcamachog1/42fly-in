@@ -4,6 +4,8 @@ from src.model.model import Hub, Connection, Map
 from pydantic import ValidationError
 from typing import Any
 
+UNLIMITED_DRONES = 10000
+
 def load_map(network: dict[str, Any]) -> Map:
     # Format input for zone objects
     zones: list[dict[str, Any]] = network['zones']
@@ -11,8 +13,10 @@ def load_map(network: dict[str, Any]) -> Map:
     for zone in zones:
         if zone['prefix'] == 'start_hub':
             start_hub = zone
+            zone['max_drones'] = UNLIMITED_DRONES
         if zone['prefix'] == 'end_hub':
             end_hub = zone
+            zone['max_drones'] = UNLIMITED_DRONES
         hubs.append(Hub(**zone))
 
     # Format input for connections objects

@@ -12,8 +12,8 @@ install:
 	$(PIP) install -r requirements.txt
 
 unit_tests:
-#	$(PYTHON) -m tests.test_load_model
-	$(PYTHON) -m tests.test_dijkstra
+	$(PYTHON) -m tests.test_load_model
+#	$(PYTHON) -m tests.test_dijkstra
 
 fly:
 	$(PYTHON) -m src.engine.main

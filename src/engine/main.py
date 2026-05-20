@@ -36,28 +36,23 @@ def fly_in(map_file: str) -> None:
             drones.append(drone)
         network.drones = drones
 
+
     def execute_turn() -> None:
         for d in network.drones:
-
-
-
-
             if d.current_zone.name == network.end_hub.name:
-                print(f"\nnetwork.end_hub: {network.end_hub.name} current zone: {d.current_zone.name}\n")
+                print(f"\nDrone id: {d.id} current zone: {d.current_zone.name}\n")
                 continue
             index = d.path.index(d.current_zone.name)
-
             d.next_zone = which_hub[d.path[index + 1]]
             # Validate connection
             conn_name = f"{d.current_zone.name}-{d.next_zone.name}"
             connect = which_connect[conn_name]
+            print(f"Continuó con drone id: {d.id} connect: {conn_name} conn occupancy:{connect.occupancy} conn capacity: {connect.max_link_capacity}")
             if connect.occupancy >= connect.max_link_capacity:
-                d.move = False
                 continue
             # Validate zone
             zone = d.next_zone
             if zone.occupancy >= zone.max_drones and zone.name != network.end_hub.name:
-                d.move = False
                 continue
             # Make move - update next objects
             connect.occupancy += 1
@@ -69,8 +64,8 @@ def fly_in(map_file: str) -> None:
                 pre_connect = which_connect[pre_conn_name]
                 pre_connect.occupancy -= 1
                 d.current_zone.occupancy -= 1
+                print(f"conn anterior: {pre_conn_name} conenct occupancy: {pre_connect.occupancy} current zone: {d.current_zone.name} zone occupancy: {d.current_zone.occupancy}")
             d.current_zone = d.next_zone
-            d.move = True
 
     #draw_map(network)
     begin_simulation()

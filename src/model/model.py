@@ -86,8 +86,9 @@ class Connection(BaseModel):
 
 class Drone(BaseModel):
     id: int = Field(ge=1)
-    current_zone: Hub
-    next_zone: Hub
+    current_zone: None | Hub = None
+    next_zone: None | Hub = None
+    preview_zone: None | Hub = None
     current_connection: None | Connection = None
     path: list[str] = []
     cost: int = 0
@@ -116,12 +117,6 @@ class Map(BaseModel):
             used_names.add(hub.name)
         return self
 
-    @model_validator(mode='after')
-    def validate_start_end_max_drones(self) -> Self:
-        for hub in self.hubs:
-            if hub.prefix.name == HubPrefix.START or hub.prefix.name == HubPrefix.END:
-                hub.max_drones = int('inf')
-        return self
 
     @model_validator(mode='after')
     def validate_coordinates(self) -> Self:
