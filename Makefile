@@ -13,7 +13,7 @@ install:
 
 unit_tests:
 #	$(PYTHON) -m tests.test_load_model
-	$(PYTHON) -m tests.test_enum
+	$(PYTHON) -m tests.test_dijkstra
 
 fly:
 	$(PYTHON) -m src.engine.main

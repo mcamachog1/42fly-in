@@ -99,7 +99,7 @@ def get_zones(zones: list[tuple[str, str]]) -> list[dict[str, Any]]:
                 'name': name,
                 'x': x,
                 'y': y,
-                'zone_type': parsed_metadata.get('zone', 'normal'),
+                'zone': parsed_metadata.get('zone', 'normal'),
                 'color': parsed_metadata.get('color', 'white'),
                 'max_drones': parsed_metadata.get('max_drones', 1),                
             }

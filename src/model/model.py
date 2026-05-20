@@ -74,13 +74,14 @@ class Hub(BaseModel):
     zone: ZoneType = Field(default=ZoneType.NORMAL)
     color: Color = Field(default=Color.WHITE)
     max_drones: int = Field(ge=1, default=1)
-    num_drones: int = 0
+    occupancy: int = 0
 
 
 class Connection(BaseModel):
     META_DATA_KEYS: ClassVar[set[str]] = {'max_link_capacity'}    
     name: str = Field(min_length=1, max_length=50)
-    max_link_capacity: int = Field(ge=1, default=1)    
+    max_link_capacity: int = Field(ge=1, default=1)
+    occupancy: int = 0
 
 
 class Drone(BaseModel):
@@ -88,8 +89,9 @@ class Drone(BaseModel):
     current_zone: Hub
     next_zone: Hub
     current_connection: None | Connection = None
-    path: list[Hub] = []
+    path: list[str] = []
     cost: int = 0
+    move: bool = False
 
 
 class Map(BaseModel):

@@ -9,74 +9,82 @@ from src.parser.load_model import load_map
 from src.model.model import Map, Drone, Hub
 from src.ui.draw import draw_map
 from src.ui.print_map import print_map
+from src.engine.dijkstra import min_cost
 
 
 MAPFILE = 'data/maps/easy/01_linear_path.txt'
 
+def print_helper(network: Map) -> None:
+    for drone in network.drones:
+        print(f"{drone.id} - path: {drone.path} - cost: {drone.cost}")    
+
+
 def fly_in(map_file: str) -> None:
     network: Map = load_map(parse_map(map_file))
-    start_hub: Hub = [hub for hub in network.hubs if hub.prefix.value == 'start_hub'][0]
-    end_hub: Hub = [hub for hub in network.hubs if hub.prefix.value == 'end_hub'][0]
-    hubs_dict: dict[str, Hub] = {hub.name: hub for hub in network.hubs}
-    neighbours: dict[str, list] = {}
+    which_hub: dict[str, Hub] = {hub.name: hub for hub in network.hubs}
+    which_connect: dict[str, Hub] = {connect.name: connect for connect in network.connections}    
 
     def begin_simulation() -> None:
+        route = min_cost(network, network.start_hub.name)[network.end_hub.name]
         drones: list[Drone] = []
         for i in range(1, network.nb_drones + 1):
             drone = Drone(id=i,
-                          current_zone=start_hub,
-                          next_zone=start_hub,
-                          path=[start_hub])
+                          current_zone=network.start_hub,
+                          next_zone=network.start_hub,
+                          cost=route[0],
+                          path=route[1])
             drones.append(drone)
         network.drones = drones
 
-        #draw_map(network)
-    def adjacent_zones(zone_name: str) -> None:
-        zones: list[tuple[int, str]] = []
-        for conn in network.connections:
-            z1, z2 = conn.name.split('-')
-            if z1 == zone_name:
-                cost = hubs_dict[z2].zone.get_cost()
-                heapq.heappush(zones, (cost, z2))                
-#                zones.append((cost, z2))
-            elif z2 == zone_name:
-                cost = hubs_dict[z1].zone.get_cost()
-                heapq.heappush(zones, (cost, z1))                
-#                zones.append((cost, z1))
-        neighbours[zone_name] = zones
+    def execute_turn() -> None:
+        for d in network.drones:
 
 
 
+
+            if d.current_zone.name == network.end_hub.name:
+                print(f"\nnetwork.end_hub: {network.end_hub.name} current zone: {d.current_zone.name}\n")
+                continue
+            index = d.path.index(d.current_zone.name)
+
+            d.next_zone = which_hub[d.path[index + 1]]
+            # Validate connection
+            conn_name = f"{d.current_zone.name}-{d.next_zone.name}"
+            connect = which_connect[conn_name]
+            if connect.occupancy >= connect.max_link_capacity:
+                d.move = False
+                continue
+            # Validate zone
+            zone = d.next_zone
+            if zone.occupancy >= zone.max_drones and zone.name != network.end_hub.name:
+                d.move = False
+                continue
+            # Make move - update next objects
+            connect.occupancy += 1
+            zone.occupancy += 1
+            # Make move - free previews objects
+            if d.current_zone.name != network.start_hub.name:     
+                pre_zone = which_hub[d.path[index -1]]
+                pre_conn_name = f"{pre_zone.name}-{d.current_zone.name}"
+                pre_connect = which_connect[pre_conn_name]
+                pre_connect.occupancy -= 1
+                d.current_zone.occupancy -= 1
+            d.current_zone = d.next_zone
+            d.move = True
+
+    #draw_map(network)
     begin_simulation()
-
-#   Turno 1
-    for hub in network.hubs:
-        adjacent_zones(hub.name)
-#    print(neighbours)
-
-    for drone in network.drones:
-        if drone.current_zone.name == end_hub.name:
-            continue
-        adjacent_zones(drone.current_zone.name)
-        drone.next_zone = heapq.heappop(neighbours[drone.current_zone.name])[1]
-            # drone.next_zone = hubs_dict[zone_name]
-            # print(heapq.heappop(neighbours[drone.current_zone.name]))
-            # while zone_name in drone.path:
-            #     lower_cost, zone_name = heapq.heappop(neighbours[drone.current_zone.name])
-
-            # drone.next_zone = hubs_dict[zone_name]
-#       else:
-#            print("case in-connection")
-#    print(network.drones)
-
-    # MOVEMENTS
-    for drone in network.drones:
-        print(drone)
-    #     if drone.next_zone.num_drones < drone.next_zone.max_drones:
-    #         drone.next_zone.num_drones += 1
-    #         drone.current_zone.num_drones -= 1
-    #         drone.current_zone = drone.next_zone
     print_map(network)
+    execute_turn()
+    print_map(network)    
+    execute_turn()
+    print_map(network)
+    execute_turn()
+    print_map(network)
+    execute_turn()
+    print_map(network)
+    execute_turn()
+    print_map(network)      
 
 if __name__ == "__main__":
     fly_in(MAPFILE)
