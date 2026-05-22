@@ -21,8 +21,8 @@ def print_helper(network: Map) -> None:
 
 def fly_in(map_file: str) -> None:
     network: Map = load_map(parse_map(map_file))
-    which_hub: dict[str, Hub] = {hub.name: hub for hub in network.hubs}
-    which_connect: dict[str, Hub] = {connect.name: connect for connect in network.connections}    
+    get_hub_object: dict[str, Hub] = {hub.name: hub for hub in network.hubs}
+    get_connect_object: dict[str, Hub] = {connect.name: connect for connect in network.connections}    
 
     def begin_simulation() -> None:
         route = min_cost(network, network.start_hub.name)[network.end_hub.name]
@@ -43,10 +43,10 @@ def fly_in(map_file: str) -> None:
                 print(f"\nDrone id: {d.id} current zone: {d.current_zone.name}\n")
                 continue
             index = d.path.index(d.current_zone.name)
-            d.next_zone = which_hub[d.path[index + 1]]
+            d.next_zone = get_hub_object[d.path[index + 1]]
             # Validate connection
             conn_name = f"{d.current_zone.name}-{d.next_zone.name}"
-            connect = which_connect[conn_name]
+            connect = get_connect_object[conn_name]
             print(f"Continuó con drone id: {d.id} connect: {conn_name} conn occupancy:{connect.occupancy} conn capacity: {connect.max_link_capacity}")
             if connect.occupancy >= connect.max_link_capacity:
                 continue
@@ -59,9 +59,9 @@ def fly_in(map_file: str) -> None:
             zone.occupancy += 1
             # Make move - free previews objects
             if d.current_zone.name != network.start_hub.name:     
-                pre_zone = which_hub[d.path[index -1]]
+                pre_zone = get_hub_object[d.path[index -1]]
                 pre_conn_name = f"{pre_zone.name}-{d.current_zone.name}"
-                pre_connect = which_connect[pre_conn_name]
+                pre_connect = get_connect_object[pre_conn_name]
                 pre_connect.occupancy -= 1
                 d.current_zone.occupancy -= 1
                 print(f"conn anterior: {pre_conn_name} conenct occupancy: {pre_connect.occupancy} current zone: {d.current_zone.name} zone occupancy: {d.current_zone.occupancy}")

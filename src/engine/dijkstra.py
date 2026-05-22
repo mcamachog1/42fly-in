@@ -5,18 +5,18 @@ from src.model.model import Map, Hub, Connection, Drone, ZoneType
 
 
 def adjacent_zones(network: Map, zone: str, path: list[str]) -> list[str]:
-    which_hub = {hub.name: hub for hub in network.hubs}
+    get_hub_object = {hub.name: hub for hub in network.hubs}
     zones: list[str] = []
     for conn in network.connections:
         z1, z2 = conn.name.split('-')
         if (z1 == zone and
             z2 not in path and
-            which_hub[z2].zone.name != ZoneType.BLOCKED.name
+            get_hub_object[z2].zone.name != ZoneType.BLOCKED.name
         ):
             zones.append(z2)
         elif (z2 == zone and
                 z1 not in path and
-                which_hub[z1].zone.name != ZoneType.BLOCKED.name               
+                get_hub_object[z1].zone.name != ZoneType.BLOCKED.name               
         ):
             zones.append(z1)
     return zones
@@ -25,7 +25,7 @@ def min_cost(
         network: Map,
         start: str) -> dict[str, tuple[int, list[str]]]:
 
-    which_hub = {hub.name: hub for hub in network.hubs}
+    get_hub_object = {hub.name: hub for hub in network.hubs}
     info: tuple[int, str, list[str]] = (0, start, [start])
     lower_cost: dict[str, tuple[int, list[str]]] = {start: (0, [start])}
     heap = []
@@ -37,7 +37,7 @@ def min_cost(
             continue
         neighbours = adjacent_zones(network, zone, path)
         for neighbor in neighbours:
-            new_cost = cost + which_hub[neighbor].zone.get_cost()
+            new_cost = cost + get_hub_object[neighbor].zone.get_cost()
             new_path = path[:]
             new_path.append(neighbor)            
             low_cost = lower_cost.get(neighbor, (float('inf'), None))[0]
