@@ -2,11 +2,12 @@
 
 from src.model.model import Color, Map
 
-def print_map(network: Map) -> None:
+def print_map(network: Map, turn: int) -> None:
+    print(f"TURNO: {turn} | ", end="")
     for drone in network.drones:
-        if drone.current_connection is not None:
+        if drone.connection is not None:
             print(
-                f"D{drone.id}-{drone.current_connection}", end=" "
+                f"D{drone.id}-{drone.connection}", end=" "
             )
         else:            
             print(

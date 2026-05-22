@@ -14,6 +14,7 @@ def load_map(network: dict[str, Any]) -> Map:
         if zone['prefix'] == 'start_hub':
             start_hub = zone
             zone['max_drones'] = UNLIMITED_DRONES
+            zone['occupancy'] = network['nb_drones']
         if zone['prefix'] == 'end_hub':
             end_hub = zone
             zone['max_drones'] = UNLIMITED_DRONES

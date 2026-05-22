@@ -10,13 +10,11 @@ def adjacent_zones(network: Map, zone: str, path: list[str]) -> list[str]:
     for conn in network.connections:
         z1, z2 = conn.name.split('-')
         if (z1 == zone and
-            z2 not in path and
-            get_hub_object[z2].zone.name != ZoneType.BLOCKED.name
+            z2 not in path # and get_hub_object[z2].zone.name != ZoneType.BLOCKED.name
         ):
             zones.append(z2)
         elif (z2 == zone and
-                z1 not in path and
-                get_hub_object[z1].zone.name != ZoneType.BLOCKED.name               
+                z1 not in path # and get_hub_object[z1].zone.name != ZoneType.BLOCKED.name               
         ):
             zones.append(z1)
     return zones

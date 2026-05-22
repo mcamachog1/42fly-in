@@ -86,10 +86,10 @@ class Connection(BaseModel):
 
 class Drone(BaseModel):
     id: int = Field(ge=1)
-    current_zone: None | Hub = None
-    next_zone: None | Hub = None
-    preview_zone: None | Hub = None
-    current_connection: None | Connection = None
+    current_zone: Hub
+    next_zone: Hub
+    preview_zone: Hub
+    connection: None | Connection = None
     path: list[str] = []
     cost: int = 0
     move: bool = False
