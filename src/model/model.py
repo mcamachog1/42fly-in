@@ -53,7 +53,7 @@ class Color(Enum):
             cls.RED: '\033[31m',
             cls.GREEN: '\033[32m',
             cls.BLUE: '\033[34m',
-            cls.YELLOW: '\033[43m',
+            cls.YELLOW: '\033[33m',
             cls.BLACK: '\033[40m',
             cls.WHITE: '\033[47m',
             cls.GRAY: '\033[100m',
@@ -97,9 +97,9 @@ class Drone(BaseModel):
 
 class Map(BaseModel):
     nb_drones: int = Field(ge=1, le=50)
-    start_hub: Hub
+    start_hub: str
     hubs: list[Hub]
-    end_hub: Hub
+    end_hub: str
     connections: list[Connection]
     drones: list[Drone] = []
 

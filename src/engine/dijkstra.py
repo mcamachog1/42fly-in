@@ -1,14 +1,22 @@
 # src/engine/dijkstra.py
 
+from typing import Optional
 from heapq import heappush, heappop
 from src.model.model import Map, Hub, Connection, Drone, ZoneType
 
 
-def adjacent_zones(network: Map, zone: str, path: list[str]) -> list[str]:
+def adjacent_zones(
+        network: Map,
+        zone: str,
+        path: list[str],
+        exclude: Optional[list[str]]=None) -> list[str]:
     get_hub_object = {hub.name: hub for hub in network.hubs}
     zones: list[str] = []
     for conn in network.connections:
         z1, z2 = conn.name.split('-')
+        if exclude is not None:
+            if z1 in exclude or z2 in exclude:
+                continue
         if (z1 == zone and
             z2 not in path # and get_hub_object[z2].zone.name != ZoneType.BLOCKED.name
         ):
@@ -21,7 +29,8 @@ def adjacent_zones(network: Map, zone: str, path: list[str]) -> list[str]:
 
 def min_cost(
         network: Map,
-        start: str) -> dict[str, tuple[int, list[str]]]:
+        start: str,
+        exclude: Optional[list[str]] = None) -> dict[str, tuple[int, list[str]]]:
 
     get_hub_object = {hub.name: hub for hub in network.hubs}
     info: tuple[int, str, list[str]] = (0, start, [start])
@@ -33,7 +42,7 @@ def min_cost(
         cost, zone, path  = heappop(heap)
         if cost > lower_cost.get(zone, (float('inf'), None))[0]:
             continue
-        neighbours = adjacent_zones(network, zone, path)
+        neighbours = adjacent_zones(network, zone, path, exclude)
         for neighbor in neighbours:
             new_cost = cost + get_hub_object[neighbor].zone.get_cost()
             new_path = path[:]
@@ -45,7 +54,8 @@ def min_cost(
     return lower_cost
 
 
-#    print(neighbours)
+
+
 
 
 

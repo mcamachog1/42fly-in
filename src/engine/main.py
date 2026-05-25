@@ -12,11 +12,27 @@ from src.ui.print_map import print_map
 from src.engine.dijkstra import min_cost
 
 
-MAPFILE = 'data/maps/easy/01_linear_path.txt'
+# MAPFILE = 'data/maps/easy/01_linear_path.txt'
+# MAPFILE = 'data/maps/easy/02_simple_fork.txt'
+# MAPFILE = 'data/maps/easy/03_basic_capacity.txt'
+# MAPFILE = 'data/maps/medium/01_dead_end_trap.txt'
+# MAPFILE = 'data/maps/medium/02_circular_loop.txt'
+MAPFILE = 'data/maps/medium/03_priority_puzzle.txt'
 
-def print_helper(network: Map) -> None:
+def print_helper1(network: Map) -> None:
     for drone in network.drones:
         print(f"{drone.id} - path: {drone.path} - cost: {drone.cost}")    
+
+def print_prepared_turn(network: Map) -> None:
+    print("DRONES TO MOVE")
+    for drone in network.drones:
+        if drone.move:
+            print(f"{drone.id=} - {drone.current_zone.name=} - {drone.preview_zone.name=} - {drone.next_zone.name=}")
+    print("DRONES TO WAIT")
+    for drone in network.drones:
+        if not drone.move:
+            print(f"{drone.id=} - {drone.current_zone.name=} - {drone.preview_zone.name=} - {drone.next_zone.name=}")
+
 
 def get_hub_object(hub: str, network: Map) -> Hub:
     hub_objects: dict[str, Hub] = {hub.name: hub for hub in network.hubs}
@@ -37,12 +53,17 @@ def free_connection(drone: Drone, network: Map) -> None:
 
 
 def move_drone(drone: Drone, network: Map) -> None:
-    drone.current_zone.occupancy  -= 1
-    drone.next_zone.occupancy += 1
     drone.preview_zone = drone.current_zone
     drone.current_zone = drone.next_zone
+    # if drone.current_zone.name == network.end_hub:
+    #     print("=====")
+    #     print(f"\n{drone.current_zone.name=}\n{drone.preview_zone.name=}\n{drone.next_zone.name=}\n")
+    #     print(f"\n{drone.current_zone.occupancy=}\n{drone.preview_zone.occupancy=}\n{drone.next_zone.occupancy=}\n")        
+    #     print("=====")        
     drone.path = drone.path[1:]
+    drone.move = False
     free_connection(drone, network)
+
 
 
 
@@ -51,48 +72,75 @@ def fly_in(map_file: str) -> None:
 
     def begin_simulation() -> None:
 
-        # route with min cost from start_hub to end_hub
-        route: tuple[int, list[str]] = min_cost(network, network.start_hub.name)[network.end_hub.name]
+        # route is the path with min cost from start_hub to end_hub
+        route: tuple[int, list[str]] = min_cost(network, network.start_hub)[network.end_hub]
         drones: list[Drone] = []
+        # get start and end objects hubs
+        start_hub: Hub = get_hub_object(network.start_hub, network)
+        end_hub: Hub = get_hub_object(network.end_hub, network)
         for i in range(1, network.nb_drones + 1):
             drone = Drone(id=i,
-                          current_zone=network.start_hub,
-                          next_zone=network.start_hub,
-                          preview_zone=network.start_hub,
+                          current_zone=start_hub,
+                          next_zone=start_hub,
+                          preview_zone=start_hub,
                           cost=route[0],
                           path=route[1])
             drones.append(drone)
         network.drones = drones
 
+    def alternative_simulation(drones: list[Drone]) -> None:
+        for drone in drones:
+            if len(drone.path) > 1:
+                try:
+                    route: tuple[int, list[str]] = min_cost(network, drone.current_zone.name, [drone.path[1]])[network.end_hub]
+                    drone.cost = route[0]
+                    drone.path = route[1]
+                except KeyError:
+                    continue
 
     def prepare_turn(network: Map) -> None:
         for drone in network.drones:
+            if drone.move:
+                continue
             if len(drone.path) > 1:
-                new_path: list[str] = drone.path[1:]
                 # Validate connection
-                conn_name = f"{drone.current_zone.name}-{new_path[0]}"
+                conn_name = f"{drone.path[0]}-{drone.path[1]}"
                 connect = get_conn_object(conn_name, network)
                 if connect.occupancy >= connect.max_link_capacity:
                     drone.move = False
                     continue
                 # Validate zone
-                if drone.next_zone.occupancy >= drone.next_zone.max_drones:
+                next_zone: Hub = get_hub_object(drone.path[1], network)
+                if next_zone.occupancy >= next_zone.max_drones:
                     drone.move = False                    
                     continue
                 # Drone can move
                 connect.occupancy += 1
-                drone.next_zone = get_hub_object(new_path[0], network)                
+                next_zone.occupancy += 1
+                drone.current_zone.occupancy  -= 1
+                drone.next_zone = next_zone
                 drone.move = True
             else:
                 drone.move = False
 
     begin_simulation()
+    draw_map(network)
     turn: int = 0
-    while network.end_hub.occupancy < network.nb_drones:
-        breakpoint()
-        #draw_map(network)
+    end_hub: Hub = get_hub_object(network.end_hub, network)
+    while end_hub.occupancy < network.nb_drones:
+        # option = int(input("Continue (1) Quit (2): "))
+        # if option == 2:
+        #     exit(0)
+        
         turn += 1
         prepare_turn(network)
+        wait_list = [drone for drone in network.drones if not drone.move]
+        # for d in wait_list:
+        #     print(f"wait: {d.id=}")
+        if len(wait_list) > 0:
+            alternative_simulation(wait_list)
+        prepare_turn(network)
+        # print_prepared_turn(network)
         for drone in network.drones:
             if drone.move:
                 move_drone(drone, network)

@@ -12,12 +12,12 @@ def load_map(network: dict[str, Any]) -> Map:
     hubs: list[Hub] = []
     for zone in zones:
         if zone['prefix'] == 'start_hub':
-            start_hub = zone
             zone['max_drones'] = UNLIMITED_DRONES
             zone['occupancy'] = network['nb_drones']
+            start_hub: str = zone['name']
         if zone['prefix'] == 'end_hub':
-            end_hub = zone
             zone['max_drones'] = UNLIMITED_DRONES
+            end_hub: str = zone['name']
         hubs.append(Hub(**zone))
 
     # Format input for connections objects
