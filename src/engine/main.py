@@ -16,10 +16,12 @@ from src.engine.dijkstra import min_cost
 # MAPFILE = 'data/maps/easy/02_simple_fork.txt'
 # MAPFILE = 'data/maps/easy/03_basic_capacity.txt'
 # MAPFILE = 'data/maps/medium/01_dead_end_trap.txt'
-# MAPFILE = 'data/maps/medium/02_circular_loop.txt'
+MAPFILE = 'data/maps/medium/02_circular_loop.txt'
 # MAPFILE = 'data/maps/medium/03_priority_puzzle.txt'
-MAPFILE = 'data/maps/hard/01_maze_nightmare.txt'
-
+# MAPFILE = 'data/maps/hard/01_maze_nightmare.txt'
+# MAPFILE = 'data/maps/hard/02_capacity_hell.txt'
+# MAPFILE = 'data/maps/hard/03_ultimate_challenge.txt'
+# MAPFILE = 'data/maps/challenger/01_the_impossible_dream.txt'
 
 def print_prepared_turn(network: Map) -> None:
     print("DRONES TO MOVE")
@@ -141,7 +143,7 @@ def fly_in(map_file: str) -> None:
                 drone.move = False
 
     begin_simulation()
-    # draw_map(network)
+    draw_map(network)
     turn: int = 0
     end_hub: Hub = get_hub_object(network.end_hub, network)
     while end_hub.occupancy < network.nb_drones:

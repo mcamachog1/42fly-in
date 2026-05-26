@@ -45,6 +45,7 @@ class Color(Enum):
     WHITE = 'white'
     GRAY = 'gray'
     ORANGE = 'orange'
+    CYAN = 'cyan'    
     RESET = '\033[0m'    
 
     def get_color(self) -> str:
@@ -53,11 +54,12 @@ class Color(Enum):
             cls.RED: '\033[31m',
             cls.GREEN: '\033[32m',
             cls.BLUE: '\033[34m',
-            cls.YELLOW: '\033[33m',
-            cls.BLACK: '\033[40m',
+            cls.YELLOW: '\033[93m',         
+            cls.BLACK: '\033[30m',          
             cls.WHITE: '\033[37m',
-            cls.GRAY: '\033[100m',
+            cls.GRAY: '\033[90m',           
             cls.ORANGE: '\033[38;5;208m',
+            cls.CYAN: '\033[36m',           
             cls.RESET: '\033[0m'
             # BG colors begin with 4 or 10
             # TEXT colors begin with 3 or 9                      
@@ -131,7 +133,7 @@ class Map(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def validate_connection(self) -> Self:
+    def validate_connectiomaze_nightmaren(self) -> Self:
         used_connections: set[str] = set()
         valid_names: set[str] = {hub.name for hub in self.hubs}
         for connection in self.connections:
