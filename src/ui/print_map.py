@@ -9,10 +9,10 @@ def print_map(network: Map, turn: int) -> None:
             print(
                 f"D{drone.id}-{drone.connection}", end=" "
             )
-        else:            
+        else:
             print(
                 f"{drone.current_zone.color.get_color()}"
                 f"D{drone.id}-{drone.current_zone.name}"
-                f"{Color.RESET.value}", end=" "
+                f"{Color.RESET.get_color()}", end=" "
             )
     print()

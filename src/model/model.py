@@ -46,6 +46,12 @@ class Color(Enum):
     GRAY = 'gray'
     ORANGE = 'orange'
     CYAN = 'cyan'    
+    PURPLE = 'purple'
+    BROWN = 'brown'
+    GOLD = 'gold'
+    MAROON = 'maroon'
+    DARKRED = 'darkred'
+    CRIMSON = 'crimson'
     RESET = '\033[0m'    
 
     def get_color(self) -> str:
@@ -60,11 +66,18 @@ class Color(Enum):
             cls.GRAY: '\033[90m',           
             cls.ORANGE: '\033[38;5;208m',
             cls.CYAN: '\033[36m',           
+            cls.PURPLE: '\033[35m',         
+            cls.BROWN: '\033[38;5;94m',     
+            cls.GOLD: '\033[38;5;220m',     
+            cls.MAROON: '\033[31;1m',
+            cls.DARKRED: '\033[38;5;124m', 
+            cls.CRIMSON: '\033[38;5;196m', 
             cls.RESET: '\033[0m'
             # BG colors begin with 4 or 10
             # TEXT colors begin with 3 or 9                      
         }
-        return colors.get(self, '\033[0m')    
+        return colors.get(self, '\033[0m')   
+
 
 
 class Hub(BaseModel):
@@ -91,10 +104,11 @@ class Drone(BaseModel):
     current_zone: Hub
     next_zone: Hub
     preview_zone: Hub
-    connection: None | Connection = None
+    connection: None | str = None
     path: list[str] = []
     cost: int = 0
     move: bool = False
+    travel_duration: int = 1  # cost in turns for next movement
 
 
 class Map(BaseModel):

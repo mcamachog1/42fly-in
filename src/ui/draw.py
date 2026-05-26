@@ -4,8 +4,8 @@ from math import sqrt, atan2
 
 from src.model.model import Map, Connection, Hub, Drone
 
-RADIO: int = 20
-SCALE: int = 100
+RADIO: int = 10
+SCALE: int = 50
 
 def draw_map(network: Map) -> None:
     hubs: list[Hub] = network.hubs

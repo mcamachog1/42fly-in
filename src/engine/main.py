@@ -7,21 +7,11 @@ from sys import stderr
 from typing import Any
 from src.parser.parse_map import parse_map
 from src.parser.load_model import load_map
-from src.model.model import Map, Drone, Hub, Connection
+from src.model.model import Map, Drone, Hub, Connection, ZoneType
 from src.ui.draw import draw_map
 from src.ui.print_map import print_map
 from src.engine.dijkstra import min_cost
 
-# MAPFILE = 'data/maps/easy/01_linear_path.txt'
-# MAPFILE = 'data/maps/easy/02_simple_fork.txt'
-# MAPFILE = 'data/maps/easy/03_basic_capacity.txt'
-# MAPFILE = 'data/maps/medium/01_dead_end_trap.txt'
-MAPFILE = 'data/maps/medium/02_circular_loop.txt'
-# MAPFILE = 'data/maps/medium/03_priority_puzzle.txt'
-# MAPFILE = 'data/maps/hard/01_maze_nightmare.txt'
-# MAPFILE = 'data/maps/hard/02_capacity_hell.txt'
-# MAPFILE = 'data/maps/hard/03_ultimate_challenge.txt'
-# MAPFILE = 'data/maps/challenger/01_the_impossible_dream.txt'
 
 def print_prepared_turn(network: Map) -> None:
     print("DRONES TO MOVE")
@@ -65,13 +55,9 @@ def free_connection(drone: Drone, network: Map) -> None:
 def move_drone(drone: Drone, network: Map) -> None:
     drone.preview_zone = drone.current_zone
     drone.current_zone = drone.next_zone
-    # if drone.current_zone.name == network.end_hub:
-    #     print("=====")
-    #     print(f"\n{drone.current_zone.name=}\n{drone.preview_zone.name=}\n{drone.next_zone.name=}\n")
-    #     print(f"\n{drone.current_zone.occupancy=}\n{drone.preview_zone.occupancy=}\n{drone.next_zone.occupancy=}\n")        
-    #     print("=====")        
     drone.path = drone.path[1:]
     drone.move = False
+    drone.connection = None
     free_connection(drone, network)
 
 
@@ -96,7 +82,8 @@ def fly_in(map_file: str) -> None:
             drones.append(drone)
         network.drones = drones
 
-    def alternative_simulation_simulation(drones: list[Drone]) -> None:
+    # Just for drones waiting after the begin simulation
+    def alternative_simulation(drones: list[Drone]) -> None:
         for drone in drones:
             if len(drone.path) > 1:
                 try:
@@ -139,11 +126,15 @@ def fly_in(map_file: str) -> None:
                 drone.current_zone.occupancy  -= 1
                 drone.next_zone = next_zone
                 drone.move = True
+                # Check for restricted zones
+                if next_zone.zone.name == ZoneType.RESTRICTED.name:
+                    drone.travel_duration = 2
+                    drone.connection = conn_name
             else:
                 drone.move = False
 
     begin_simulation()
-    draw_map(network)
+    # draw_map(network)
     turn: int = 0
     end_hub: Hub = get_hub_object(network.end_hub, network)
     while end_hub.occupancy < network.nb_drones:
@@ -157,15 +148,36 @@ def fly_in(map_file: str) -> None:
         # for d in wait_list:
         #     print(f"wait: {d.id=}")
         if len(wait_list) > 0:
-            alternative_simulation_simulation(wait_list)
+            alternative_simulation(wait_list)
         prepare_turn(network)
         # print_prepared_turn(network)
         for drone in network.drones:
-            if drone.move:
+            if drone.move and drone.travel_duration == 1:
                 move_drone(drone, network)
+            elif drone.move and drone.travel_duration > 1:  # wait if drone will be moving to a restricted zone
+                drone.travel_duration -= 1
         print_map(network, turn)
         reset_simulation()
 
 
 if __name__ == "__main__":
-    fly_in(MAPFILE)
+
+    maps: list[str] = [
+        # 'data/maps/easy/01_linear_path.txt',
+        # 'data/maps/easy/02_simple_fork.txt',
+        # 'data/maps/easy/03_basic_capacity.txt',
+        # 'data/maps/medium/01_dead_end_trap.txt',
+        'data/maps/medium/02_circular_loop.txt',
+        'data/maps/medium/03_priority_puzzle.txt',
+        'data/maps/hard/01_maze_nightmare.txt',
+        'data/maps/hard/02_capacity_hell.txt',
+        'data/maps/hard/03_ultimate_challenge.txt',
+        'data/maps/challenger/01_the_impossible_dream.txt',
+    ]
+
+    for map in maps:
+        print(map)
+        fly_in(map)
+        option: int = int(input('Continue(1) - Quit(0): '))
+        if option == 0:
+            exit(0)
