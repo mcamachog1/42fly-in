@@ -55,7 +55,7 @@ class Color(Enum):
             cls.BLUE: '\033[34m',
             cls.YELLOW: '\033[33m',
             cls.BLACK: '\033[40m',
-            cls.WHITE: '\033[47m',
+            cls.WHITE: '\033[37m',
             cls.GRAY: '\033[100m',
             cls.ORANGE: '\033[38;5;208m',
             cls.RESET: '\033[0m'

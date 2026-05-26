@@ -3,6 +3,7 @@
 
 
 import heapq
+from sys import stderr
 from typing import Any
 from src.parser.parse_map import parse_map
 from src.parser.load_model import load_map
@@ -11,17 +12,14 @@ from src.ui.draw import draw_map
 from src.ui.print_map import print_map
 from src.engine.dijkstra import min_cost
 
-
 # MAPFILE = 'data/maps/easy/01_linear_path.txt'
 # MAPFILE = 'data/maps/easy/02_simple_fork.txt'
 # MAPFILE = 'data/maps/easy/03_basic_capacity.txt'
 # MAPFILE = 'data/maps/medium/01_dead_end_trap.txt'
 # MAPFILE = 'data/maps/medium/02_circular_loop.txt'
-MAPFILE = 'data/maps/medium/03_priority_puzzle.txt'
+# MAPFILE = 'data/maps/medium/03_priority_puzzle.txt'
+MAPFILE = 'data/maps/hard/01_maze_nightmare.txt'
 
-def print_helper1(network: Map) -> None:
-    for drone in network.drones:
-        print(f"{drone.id} - path: {drone.path} - cost: {drone.cost}")    
 
 def print_prepared_turn(network: Map) -> None:
     print("DRONES TO MOVE")
@@ -39,9 +37,20 @@ def get_hub_object(hub: str, network: Map) -> Hub:
     hub_object: Hub = hub_objects[hub]
     return hub_object
 
+
 def get_conn_object(conn: str, network: Map) -> Connection:
-    conn_objects: dict[str, Connection] = {conn.name: conn for conn in network.connections}
-    conn_object: Connection = conn_objects[conn]
+    conn_objects: dict[str, Connection] = {c.name: c for c in network.connections}
+    # Make conmmutative names
+    swap_names: dict[str, Connection] = {}
+    for name, obj in conn_objects.items():
+        z1, z2 = name.split('-')
+        swap_names[f"{z2}-{z1}"] = obj
+    conn_total = conn_objects | swap_names
+    try:
+        conn_object: Connection = conn_total[conn]
+    except KeyError as e:
+        print(f"Invalid map connection '{conn}'", file=stderr)
+        exit(1)
     return conn_object
 
 
@@ -49,7 +58,6 @@ def free_connection(drone: Drone, network: Map) -> None:
     conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
     connect = get_conn_object(conn_name, network)
     connect.occupancy -= 1
-
 
 
 def move_drone(drone: Drone, network: Map) -> None:
@@ -63,8 +71,6 @@ def move_drone(drone: Drone, network: Map) -> None:
     drone.path = drone.path[1:]
     drone.move = False
     free_connection(drone, network)
-
-
 
 
 def fly_in(map_file: str) -> None:
@@ -88,11 +94,22 @@ def fly_in(map_file: str) -> None:
             drones.append(drone)
         network.drones = drones
 
-    def alternative_simulation(drones: list[Drone]) -> None:
+    def alternative_simulation_simulation(drones: list[Drone]) -> None:
         for drone in drones:
             if len(drone.path) > 1:
                 try:
                     route: tuple[int, list[str]] = min_cost(network, drone.current_zone.name, [drone.path[1]])[network.end_hub]
+                    drone.cost = route[0]
+                    drone.path = route[1]
+                except KeyError:
+                    continue
+
+    # Search optimal solution again for waited nodes without excluding nodes
+    def reset_simulation() -> None:
+        for drone in network.drones:
+            if not drone.move and len(drone.path) > 1:
+                try:
+                    route: tuple[int, list[str]] = min_cost(network, drone.current_zone.name)[network.end_hub]
                     drone.cost = route[0]
                     drone.path = route[1]
                 except KeyError:
@@ -124,7 +141,7 @@ def fly_in(map_file: str) -> None:
                 drone.move = False
 
     begin_simulation()
-    draw_map(network)
+    # draw_map(network)
     turn: int = 0
     end_hub: Hub = get_hub_object(network.end_hub, network)
     while end_hub.occupancy < network.nb_drones:
@@ -138,12 +155,15 @@ def fly_in(map_file: str) -> None:
         # for d in wait_list:
         #     print(f"wait: {d.id=}")
         if len(wait_list) > 0:
-            alternative_simulation(wait_list)
+            alternative_simulation_simulation(wait_list)
         prepare_turn(network)
         # print_prepared_turn(network)
         for drone in network.drones:
             if drone.move:
                 move_drone(drone, network)
         print_map(network, turn)
+        reset_simulation()
+
+
 if __name__ == "__main__":
     fly_in(MAPFILE)

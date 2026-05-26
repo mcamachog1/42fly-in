@@ -8,7 +8,7 @@ from src.model.model import Map, Hub, Connection, Drone, ZoneType
 def adjacent_zones(
         network: Map,
         zone: str,
-        path: list[str],
+        # path: list[str],
         exclude: Optional[list[str]]=None) -> list[str]:
     get_hub_object = {hub.name: hub for hub in network.hubs}
     zones: list[str] = []
@@ -17,13 +17,9 @@ def adjacent_zones(
         if exclude is not None:
             if z1 in exclude or z2 in exclude:
                 continue
-        if (z1 == zone and
-            z2 not in path # and get_hub_object[z2].zone.name != ZoneType.BLOCKED.name
-        ):
+        if z1 == zone:
             zones.append(z2)
-        elif (z2 == zone and
-                z1 not in path # and get_hub_object[z1].zone.name != ZoneType.BLOCKED.name               
-        ):
+        elif z2 == zone:
             zones.append(z1)
     return zones
 
@@ -42,7 +38,7 @@ def min_cost(
         cost, zone, path  = heappop(heap)
         if cost > lower_cost.get(zone, (float('inf'), None))[0]:
             continue
-        neighbours = adjacent_zones(network, zone, path, exclude)
+        neighbours = adjacent_zones(network, zone, exclude)
         for neighbor in neighbours:
             new_cost = cost + get_hub_object[neighbor].zone.get_cost()
             new_path = path[:]
@@ -51,6 +47,10 @@ def min_cost(
             if new_cost < low_cost:
                 lower_cost[neighbor] = new_cost, new_path
                 heappush(heap, (new_cost, neighbor, new_path))
+            # Condition to give priority to PRIORITY TypeZone
+            elif new_cost == low_cost and get_hub_object[neighbor].zone.name == ZoneType.PRIORITY:
+                lower_cost[neighbor] = new_cost, new_path
+                heappush(heap, (new_cost, neighbor, new_path))                
     return lower_cost
 
 
