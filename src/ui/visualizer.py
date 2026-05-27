@@ -23,8 +23,12 @@ class Visualizer:
         self.hubs = self._generate_hubs()
 
         # try
-        drone_original = pygame.image.load("src/ui/img/drone.png").convert_alpha()
-        self.drone_image = pygame.transform.scale(drone_original, (30,30))
+        drone_original1 = pygame.image.load("src/ui/img/drone.png").convert_alpha()
+        self.drone_image1 = pygame.transform.scale(drone_original1, (30,30))
+        drone_original2 = pygame.image.load("src/ui/img/drone_bw.png").convert_alpha()
+        self.drone_image2 = pygame.transform.scale(drone_original2, (30,30))
+
+
 
     def to_pygame_coords(self, model_x: float, model_y: float) -> tuple[int, int]:
             """
@@ -85,10 +89,17 @@ class Visualizer:
             ym = (drone.current_zone.y + drone.next_zone.y) / 2
             pos = self.to_pygame_coords(xm, ym)
 
-            drone_rect = self.drone_image.get_rect()
-            drone_rect.center = pos
-            self.screen.blit(self.drone_image, drone_rect)
-            # pygame.draw.circle(self.screen, color, pos, 5)
+            if drone.id == 1:
+                drone_rect1 = self.drone_image1.get_rect()
+                drone_rect1.center = pos
+                self.screen.blit(self.drone_image1, drone_rect1)
+            elif drone.id == 2:
+                drone_rect2 = self.drone_image2.get_rect()
+                drone_rect2.center = pos
+                self.screen.blit(self.drone_image2, drone_rect2)
+
+            else:
+                pygame.draw.circle(self.screen, color, pos, 5)
 
         pygame.display.flip()
-        self.clock.tick(1) # Forzar 60 fotogramas por segundo
+        self.clock.tick(0.5) # Forzar 60 fotogramas por segundo
