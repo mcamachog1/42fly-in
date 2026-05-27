@@ -169,12 +169,12 @@ if __name__ == "__main__":
         # 'data/maps/easy/01_linear_path.txt',
         # 'data/maps/easy/02_simple_fork.txt',
         # 'data/maps/easy/03_basic_capacity.txt',
-        'data/maps/medium/01_dead_end_trap.txt',
-        'data/maps/medium/02_circular_loop.txt',
-        'data/maps/medium/03_priority_puzzle.txt',
+        # 'data/maps/medium/01_dead_end_trap.txt',
+        # 'data/maps/medium/02_circular_loop.txt',
+        # 'data/maps/medium/03_priority_puzzle.txt',
         # 'data/maps/hard/01_maze_nightmare.txt',
-        # 'data/maps/hard/02_capacity_hell.txt',
-        # 'data/maps/hard/03_ultimate_challenge.txt',
+        'data/maps/hard/02_capacity_hell.txt',
+        'data/maps/hard/03_ultimate_challenge.txt',
         # 'data/maps/challenger/01_the_impossible_dream.txt',
     ]
 

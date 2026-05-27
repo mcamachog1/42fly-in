@@ -1,18 +1,28 @@
 import pygame
-from src.model.model import Hub, Color
+from src.model.model import Hub, Color, ZoneType
 
 class Visualizer:
-    def __init__(self, network, width=1200, height=600, scale=45):
+
+    RADIUS_HUB = 20
+    RADIUS_DRONE = 8
+
+    def __init__(self, network, width=1200, height=600, scale=60):
         self.network = network
         self.clock = pygame.time.Clock()
         self.width = width
         self.height = height
-        self.scale = scale         
+        self.scale = scale
+
 
         pygame.init()
-        self.screen = pygame.display.set_mode((width, height))
+        self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
         pygame.display.set_caption("Fly-in Drone Simulator")
-        
+
+        # VARIABLE DE ESTADO CLAVE:
+        # False = Modo manual (Espera barra espaciadora)
+        # True  = Modo automático (Avanza solo con el reloj)
+        self.modo_automatico = False
+
         # Calculamos el centro de la pantalla en píxeles
         self.center_x = 0.05*width 
         self.center_y = height // 2
@@ -22,14 +32,10 @@ class Visualizer:
         self.positions = self._generate_hub_positions()
         self.hubs = self._generate_hubs()
 
-        # try
-        drone_original1 = pygame.image.load("src/ui/img/drone.png").convert_alpha()
-        self.drone_image1 = pygame.transform.scale(drone_original1, (30,30))
-        drone_original2 = pygame.image.load("src/ui/img/drone_bw.png").convert_alpha()
-        self.drone_image2 = pygame.transform.scale(drone_original2, (30,30))
+        pygame.font.init()
+        self.font = pygame.font.SysFont(None, 14)
 
-
-
+     
     def to_pygame_coords(self, model_x: float, model_y: float) -> tuple[int, int]:
             """
             Convierte coordenadas cartesianas (centro 0,0) al sistema 
@@ -45,6 +51,29 @@ class Visualizer:
             
             return pygame_x, pygame_y
 
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pass
+                
+            elif event.type == pygame.VIDEORESIZE:
+                self.width, self.height = event.w, event.h
+                self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
+                # Calculamos el centro de la pantalla en píxeles
+                self.center_x = 0.025*self.width 
+                self.center_y = self.height // 2
+
+            elif event.type == pygame.KEYDOWN:
+                # CASO A: Presiona ESPACIO -> Modo Manual / Avanzar un solo paso
+                if event.key == pygame.K_SPACE:
+                    self.modo_automatico = False  # Si estaba en automático, se pausa
+                    # self.avanzar_logica_drones(drones)
+                    # necesita_redibujar = True
+                    
+                # CASO B: Presiona la tecla 'A' -> Activar/Desactivar el Reloj Automático
+                elif event.key == pygame.K_a or event.key == pygame.K_RETURN:
+                    # Conmutamos el estado (si está apagado lo prende, y viceversa)
+                    self.modo_automatico = not self.modo_automatico                
 
     def _generate_hubs(self) -> dict[str, Hub]:
         hubs: dict[str, Hub] = {h.name: h for h in self.network.hubs}
@@ -63,43 +92,57 @@ class Visualizer:
         # en forma de cuadrícula o grafo ordenado en la pantalla.
         positions = {}
         for drone in self.network.drones:
+            hub = drone.current_zone
             positions[hub.name] = (hub.x, hub.y)
         return positions
 
+    def draw_drone_with_text(self, center_pos: tuple[int, int], text: str) -> None:
+        circle_color = Color.BLACK.value
+        pygame.draw.circle(self.screen, circle_color, center_pos, self.RADIUS_DRONE)
+        text_color = Color.WHITE.value
+        text_surface = self.font.render(text, True, text_color)
+        text_rect = text_surface.get_rect()
+        text_rect.center = center_pos
+        self.screen.blit(text_surface, text_rect)
+
     def draw_simulation(self, drones):
-        self.screen.fill((20, 20, 20)) # Fondo gris oscuro uniforme
-        
+
+        self.handle_events()
+        bg_color = 'gray'
+        self.screen.fill(bg_color) # Fondo gris oscuro uniforme
         # 1. Dibujar conexiones (Líneas)
         for conn in self.network.connections:
+            line_color = 'black'
             z1, z2 = conn.name.split('-')
             z1x, z1y = self.to_pygame_coords(*self.positions[z1])
             z2x, z2y = self.to_pygame_coords(*self.positions[z2])
-            pygame.draw.line(self.screen, (100, 100, 100), (z1x, z1y), (z2x, z2y), 2)
-            
-        # 2. Dibujar Hubs (Círculos)
+            if self.hubs[z1].zone.name == ZoneType.RESTRICTED.name or self.hubs[z2].zone.name == ZoneType.RESTRICTED.name:
+                line_color = 'red'
+            elif self.hubs[z1].zone.name == ZoneType.PRIORITY.name or self.hubs[z2].zone.name == ZoneType.PRIORITY.name:
+                line_color = 'blue'
+            elif self.hubs[z1].zone.name == ZoneType.BLOCKED.name or self.hubs[z2].zone.name == ZoneType.BLOCKED.name:
+                line_color = 'gray'
+
+            pygame.draw.line(self.screen, line_color, (z1x, z1y), (z2x, z2y), 2)
+        # 2. Dibujar Hubs (Círculos)not self.modo_automatico 
         for hub in self.network.hubs:
             pos = self.to_pygame_coords(*self.positions[hub.name])
             color = hub.color.value
-            pygame.draw.circle(self.screen, color, pos, 15)
-            
+            pygame.draw.circle(self.screen, color, pos, self.RADIUS_HUB)
         # 3. Dibujar Drones (Círculos más pequeños flotantes o imágenes)
         color = Color.BLACK.value
         for drone in drones:
             xm = (drone.current_zone.x + drone.next_zone.x) / 2
             ym = (drone.current_zone.y + drone.next_zone.y) / 2
             pos = self.to_pygame_coords(xm, ym)
-
-            if drone.id == 1:
-                drone_rect1 = self.drone_image1.get_rect()
-                drone_rect1.center = pos
-                self.screen.blit(self.drone_image1, drone_rect1)
-            elif drone.id == 2:
-                drone_rect2 = self.drone_image2.get_rect()
-                drone_rect2.center = pos
-                self.screen.blit(self.drone_image2, drone_rect2)
-
-            else:
-                pygame.draw.circle(self.screen, color, pos, 5)
-
+            self.draw_drone_with_text(pos, str(drone.id))
+        # 4. CONTROL DEL RELOJ (Crucial)
+        # - Si está en automático, limitamos a 5-10 turnos por segundo para que sea legible.
+        # - Si está en manual, limitamos a 60 FPS solo para que el bucle no sature la CPU al buscar eventos.
+        # breakpoint()
         pygame.display.flip()
-        self.clock.tick(0.5) # Forzar 60 fotogramas por segundo
+        if self.modo_automatico:
+            self.clock.tick(60)  # Velocidad de la automatización (5 pasos por segundo)
+        else:
+            self.clock.tick(0.5) # Tas
+
