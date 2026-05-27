@@ -22,6 +22,10 @@ class Visualizer:
         self.positions = self._generate_hub_positions()
         self.hubs = self._generate_hubs()
 
+        # try
+        drone_original = pygame.image.load("src/ui/img/drone.png").convert_alpha()
+        self.drone_image = pygame.transform.scale(drone_original, (30,30))
+
     def to_pygame_coords(self, model_x: float, model_y: float) -> tuple[int, int]:
             """
             Convierte coordenadas cartesianas (centro 0,0) al sistema 
@@ -80,7 +84,11 @@ class Visualizer:
             xm = (drone.current_zone.x + drone.next_zone.x) / 2
             ym = (drone.current_zone.y + drone.next_zone.y) / 2
             pos = self.to_pygame_coords(xm, ym)
-            pygame.draw.circle(self.screen, color, pos, 5)
+
+            drone_rect = self.drone_image.get_rect()
+            drone_rect.center = pos
+            self.screen.blit(self.drone_image, drone_rect)
+            # pygame.draw.circle(self.screen, color, pos, 5)
 
         pygame.display.flip()
         self.clock.tick(1) # Forzar 60 fotogramas por segundo
