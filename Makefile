@@ -15,6 +15,9 @@ unit_tests:
 	$(PYTHON) -m tests.test_load_model
 #	$(PYTHON) -m tests.test_dijkstra
 
+pygame_test:
+	$(PYTHON) -m pygame.examples.aliens
+
 fly:
 	$(PYTHON) -m src.engine.main
     

@@ -10,3 +10,6 @@ pydantic
 
 4.- Ver la version de pydantic
 pip show pydantic
+
+Icon del drone:
+<a href="https://www.flaticon.com/free-icons/drone-case" title="drone case icons">Drone case icons created by Freepik - Flaticon</a>

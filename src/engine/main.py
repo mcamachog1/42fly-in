@@ -10,6 +10,7 @@ from src.parser.load_model import load_map
 from src.model.model import Map, Drone, Hub, Connection, ZoneType
 from src.ui.draw import draw_map
 from src.ui.print_map import print_map
+from src.ui.visualizer import Visualizer
 from src.engine.dijkstra import min_cost
 
 
@@ -63,7 +64,7 @@ def move_drone(drone: Drone, network: Map) -> None:
 
 def fly_in(map_file: str) -> None:
     network: Map = load_map(parse_map(map_file))
-
+    
     def begin_simulation() -> None:
 
         # route is the path with min cost from start_hub to end_hub
@@ -134,6 +135,7 @@ def fly_in(map_file: str) -> None:
                 drone.move = False
 
     begin_simulation()
+    plot = Visualizer(network)
     # draw_map(network)
     turn: int = 0
     end_hub: Hub = get_hub_object(network.end_hub, network)
@@ -157,18 +159,19 @@ def fly_in(map_file: str) -> None:
             elif drone.move and drone.travel_duration > 1:  # wait if drone will be moving to a restricted zone
                 drone.travel_duration -= 1
         print_map(network, turn)
+        plot.draw_simulation(network.drones)
         reset_simulation()
 
 
 if __name__ == "__main__":
 
     maps: list[str] = [
-        # 'data/maps/easy/01_linear_path.txt',
-        # 'data/maps/easy/02_simple_fork.txt',
-        # 'data/maps/easy/03_basic_capacity.txt',
+        'data/maps/easy/01_linear_path.txt',
+        'data/maps/easy/02_simple_fork.txt',
+        'data/maps/easy/03_basic_capacity.txt',
         # 'data/maps/medium/01_dead_end_trap.txt',
-        'data/maps/medium/02_circular_loop.txt',
-        'data/maps/medium/03_priority_puzzle.txt',
+        # 'data/maps/medium/02_circular_loop.txt',
+        # 'data/maps/medium/03_priority_puzzle.txt',
         'data/maps/hard/01_maze_nightmare.txt',
         'data/maps/hard/02_capacity_hell.txt',
         'data/maps/hard/03_ultimate_challenge.txt',
@@ -176,8 +179,8 @@ if __name__ == "__main__":
     ]
 
     for map in maps:
-        print(map)
         fly_in(map)
+        print(map)
         option: int = int(input('Continue(1) - Quit(0): '))
         if option == 0:
             exit(0)
