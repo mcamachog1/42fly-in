@@ -32,7 +32,7 @@ class ZoneType(Enum):
             ZoneType.NORMAL: 1,
             ZoneType.RESTRICTED: 2,
             ZoneType.PRIORITY: 1,
-            ZoneType.BLOCKED: float('inf'),       
+            ZoneType.BLOCKED: 10000,  # Represents infinity cost       
         }
         return costs.get(self, 1)
 

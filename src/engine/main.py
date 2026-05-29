@@ -54,12 +54,15 @@ def free_connection(drone: Drone, network: Map) -> None:
 
 
 def move_drone(drone: Drone, network: Map) -> None:
-    drone.preview_zone = drone.current_zone
-    drone.current_zone = drone.next_zone
-    drone.path = drone.path[1:]
-    drone.move = False
-    drone.connection = None
-    free_connection(drone, network)
+    if drone.move and drone.travel_duration == 1:
+        drone.preview_zone = drone.current_zone
+        drone.current_zone = drone.next_zone
+        drone.path = drone.path[1:]
+        drone.move = False
+        drone.connection = None
+        free_connection(drone, network)
+    elif drone.move and drone.travel_duration > 1:  # wait if drone will be moving to a restricted zone
+        drone.travel_duration -= 1
 
 
 def fly_in(map_file: str) -> None:
@@ -105,7 +108,7 @@ def fly_in(map_file: str) -> None:
                 except KeyError:
                     continue
 
-    def prepare_turn(network: Map) -> None:
+    def prepare_turn() -> None:
         for drone in network.drones:
             if drone.move:
                 continue
@@ -134,33 +137,27 @@ def fly_in(map_file: str) -> None:
             else:
                 drone.move = False
 
+    # def move_drone():
+    #     pass
+
+
     begin_simulation()
     plot = Visualizer(network)
-    # draw_map(network)
     turn: int = 0
     end_hub: Hub = get_hub_object(network.end_hub, network)
     while end_hub.occupancy < network.nb_drones:
-        # option = int(input("Continue (1) Quit (2): "))
-        # if option == 2:
-        #     exit(0)
-        
         turn += 1
-        prepare_turn(network)
+        prepare_turn()
         wait_list = [drone for drone in network.drones if not drone.move]
-        # for d in wait_list:
-        #     print(f"wait: {d.id=}")
         if len(wait_list) > 0:
             alternative_simulation(wait_list)
-        prepare_turn(network)
-        # print_prepared_turn(network)
+        prepare_turn()
         for drone in network.drones:
-            if drone.move and drone.travel_duration == 1:
-                move_drone(drone, network)
-            elif drone.move and drone.travel_duration > 1:  # wait if drone will be moving to a restricted zone
-                drone.travel_duration -= 1
+            move_drone(drone, network)
         print_map(network, turn)
-        plot.draw_simulation(network.drones)
+        plot.draw_simulation()
         reset_simulation()
+      
 
 
 if __name__ == "__main__":
@@ -170,9 +167,9 @@ if __name__ == "__main__":
         # 'data/maps/easy/02_simple_fork.txt',
         # 'data/maps/easy/03_basic_capacity.txt',
         # 'data/maps/medium/01_dead_end_trap.txt',
-        # 'data/maps/medium/02_circular_loop.txt',
-        # 'data/maps/medium/03_priority_puzzle.txt',
-        # 'data/maps/hard/01_maze_nightmare.txt',
+        'data/maps/medium/02_circular_loop.txt',
+        'data/maps/medium/03_priority_puzzle.txt',
+        'data/maps/hard/01_maze_nightmare.txt',
         'data/maps/hard/02_capacity_hell.txt',
         'data/maps/hard/03_ultimate_challenge.txt',
         # 'data/maps/challenger/01_the_impossible_dream.txt',
