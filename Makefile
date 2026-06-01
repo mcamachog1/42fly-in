@@ -19,7 +19,8 @@ debug:
 
 clean:
 	@find . -name "__pycache__" -type d -exec rm -rf {} +
-
+	@find . -name ".mypy_cache" -type d -exec rm -rf {} +	
+	
 lint:
 	@clear
 	$(PYTHON) -m flake8 --exclude=.venv,venv,build,dist,__pycache__ .
@@ -29,15 +30,3 @@ lint-strict:
 	@clear
 	flake8 --exclude=.venv,venv,build,dist,__pycache__ .
 	$(PYTHON) -m mypy . --strict
-
-
-unit_tests:
-	$(PYTHON) -m tests.test_load_model
-#	$(PYTHON) -m tests.test_dijkstra
-
-pygame_test:
-	$(PYTHON) -m pygame.examples.aliens
-
-
-files:
-	@find . \( -path "./venv" -o -name ".?*" \) -prune -o -print
