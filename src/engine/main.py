@@ -73,6 +73,7 @@ def move_drone(drone: Drone, network: Map) -> None:
     # wait if drone will be moving to a restricted zone
     elif drone.move and drone.travel_duration > 1:
         drone.travel_duration -= 1
+        
 
 
 def fly_in(map_file: str) -> None:
@@ -88,11 +89,11 @@ def fly_in(map_file: str) -> None:
         for i in range(1, network.nb_drones + 1):
             drone = Drone(
                 id=i,
-                current_zone=get_hub_object(network.start_hub, network),
-                next_zone=get_hub_object(network.start_hub, network),
-                preview_zone=get_hub_object(network.start_hub, network),
                 cost=route[0],
-                path=route[1]
+                path=route[1],
+                preview_zone=get_hub_object(network.start_hub, network),
+                current_zone=get_hub_object(network.start_hub, network),
+                next_zone=get_hub_object(route[1][1], network),
             )
             drones.append(drone)
         network.drones = drones
@@ -112,19 +113,38 @@ def fly_in(map_file: str) -> None:
                 except KeyError:
                     continue
 
-    # Search optimal solution again for waited nodes without excluding nodes
+    # Search optimal solution again for waited nodes without excluding nodes,
+    # (only exclude start node)
     def reset_simulation() -> None:
         for drone in network.drones:
             if not drone.move and len(drone.path) > 1:
                 try:
                     route: tuple[int, list[str]] = min_cost(
                             network,
-                            drone.current_zone.name
+                            drone.current_zone.name,
+                            network.start_hub
                             )[network.end_hub]
                     drone.cost = route[0]
                     drone.path = route[1]
                 except KeyError:
                     continue
+
+    def get_full_hubs() -> list[str]:
+        full: list[str] = []
+        for hub in network.hubs:
+            traffic_rate = hub.occupancy / hub.max_drones
+            if traffic_rate > 0.9:
+                full.append(hub.name)
+                hub.zone = ZoneType.TRAFFIC
+        return full
+
+
+    def traffic_simulation() -> None:
+        traffic_flow = (get_hub_object(network.start_hub, network).occupancy + get_hub_object(network.end_hub, network).occupancy) / network.nb_drones
+        if traffic_flow < 0.4:
+            exclude = get_full_hubs()
+            print(f"{exclude=}")
+
 
     def prepare_turn() -> None:
         for drone in network.drones:
@@ -142,6 +162,7 @@ def fly_in(map_file: str) -> None:
                 if next_zone.occupancy >= next_zone.max_drones:
                     drone.move = False
                     continue
+                
                 # Drone can move
                 connect.occupancy += 1
                 next_zone.occupancy += 1
@@ -170,6 +191,7 @@ def fly_in(map_file: str) -> None:
             move_drone(drone, network)
         print_map(network, turn)
         plot.draw_simulation()
+        traffic_simulation()
         reset_simulation()
 
 
@@ -179,13 +201,13 @@ if __name__ == "__main__":
         # 'data/maps/easy/01_linear_path.txt',
         # 'data/maps/easy/02_simple_fork.txt',
         # 'data/maps/easy/03_basic_capacity.txt',
-        # 'data/maps/medium/01_dead_end_trap.txt',
-        'data/maps/medium/02_circular_loop.txt',
-        'data/maps/medium/03_priority_puzzle.txt',
-        'data/maps/hard/01_maze_nightmare.txt',
-        'data/maps/hard/02_capacity_hell.txt',
-        'data/maps/hard/03_ultimate_challenge.txt',
-        # 'data/maps/challenger/01_the_impossible_dream.txt',
+        #  'data/maps/medium/01_dead_end_trap.txt',
+        #  'data/maps/medium/02_circular_loop.txt',
+        # 'data/maps/medium/03_priority_puzzle.txt',
+        #  'data/maps/hard/01_maze_nightmare.txt',
+        # 'data/maps/hard/02_capacity_hell.txt',
+        #  'data/maps/hard/03_ultimate_challenge.txt',
+         'data/maps/challenger/01_the_impossible_dream.txt',
     ]
 
     for map in maps:

@@ -1,5 +1,5 @@
 import pygame
-from src.model.model import Hub, Color, ZoneType, Map
+from src.model.model import Hub, Color, ZoneType, Map, Connection
 
 
 class Visualizer:
@@ -40,7 +40,7 @@ class Visualizer:
         network: Map,
         width: int = 1200,
         height: int = 600,
-        scale: int = 100
+        scale: int = 80
     ) -> None:
         """Initializes the Visualizer window and properties.
 
@@ -65,6 +65,7 @@ class Visualizer:
         self.network = network
         self.hub_coord = self.get_hub_coord()
         self.hubs = self.get_hub_object()
+        self.conns = self.get_conn_object()        
 
         # Display mode autoplay vs step by step
         self.autoplay = False
@@ -112,6 +113,19 @@ class Visualizer:
         """
         hubs: dict[str, Hub] = {h.name: h for h in self.network.hubs}
         return hubs
+
+    def get_conn_object(self) -> dict[str, Connection]:
+
+        conn_objects: dict[str, Connection] = {
+            c.name: c for c in self.network.connections
+        }
+        # Make conmmutative names
+        swap_names: dict[str, Connection] = {}
+        for name, obj in conn_objects.items():
+            z1, z2 = name.split('-')
+            swap_names[f"{z2}-{z1}"] = obj
+        conn_total = conn_objects | swap_names
+        return conn_total
 
     def get_hub_coord(self) -> dict[str, tuple[int, int]]:
         """Extracts the abstract model coordinates for all existing hubs.
@@ -162,17 +176,17 @@ class Visualizer:
             z1x, z1y = self.to_pygame_coords(*self.hub_coord[z1])
             z2x, z2y = self.to_pygame_coords(*self.hub_coord[z2])
             if (
-                self.hubs[z1].zone.name == ZoneType.RESTRICTED.name or
+                # self.hubs[z1].zone.name == ZoneType.RESTRICTED.name or
                 self.hubs[z2].zone.name == ZoneType.RESTRICTED.name
             ):
                 line_color = 'red'
             elif (
-                self.hubs[z1].zone.name == ZoneType.PRIORITY.name or
+                # self.hubs[z1].zone.name == ZoneType.PRIORITY.name or
                 self.hubs[z2].zone.name == ZoneType.PRIORITY.name
             ):
                 line_color = 'blue'
             elif (
-                self.hubs[z1].zone.name == ZoneType.BLOCKED.name or
+                # self.hubs[z1].zone.name == ZoneType.BLOCKED.name or
                 self.hubs[z2].zone.name == ZoneType.BLOCKED.name
             ):
                 line_color = 'gray'
@@ -192,11 +206,34 @@ class Visualizer:
             pygame.draw.circle(self.screen, color, pos, self.RADIUS_HUB)
 
     def draw_drones(self) -> None:
-        """Renders currently moving drones centered at their mid-travel
-        point."""
+
+        delta: dict[str, int] = {h.name: 0 for h in self.network.hubs}
+        for c in self.network.connections:
+            delta[c.name] = 0
         for drone in self.network.drones:
-            xm = (drone.current_zone.x + drone.next_zone.x) / 2
-            ym = (drone.current_zone.y + drone.next_zone.y) / 2
+            # When drone stay in one connection (restricted zone)
+            if drone.connection != None:
+                xm = (drone.current_zone.x + drone.next_zone.x) / 2
+                ym = (drone.current_zone.y + drone.next_zone.y) / 2
+                if self.conns[drone.connection].occupancy > 1:
+                    delta[drone.connection] += 0.15
+                    xm -= delta[drone.connection]
+                elif self.conns[drone.connection].occupancy  == 1:
+                    delta[drone.connection] = 0
+             # Normal zones
+            else:
+                xm = drone.current_zone.x
+                ym = drone.current_zone.y
+                if (
+                    drone.current_zone.name != self.network.start_hub and
+                    drone.current_zone.name != self.network.end_hub
+                ):
+                    if drone.current_zone.occupancy > 1:
+                        delta[drone.current_zone.name] += 0.15
+                        xm -= delta[drone.current_zone.name]
+                    elif drone.current_zone.occupancy == 1:
+                        delta[drone.current_zone.name] = 0
+                
             pos = self.to_pygame_coords(xm, ym)
             self.draw_drone_with_text(pos, str(drone.id))
 
@@ -222,13 +259,12 @@ class Visualizer:
             )
             self.center_x = 0.025 * self.width
             self.center_y = self.height // 2
-
-        # Re-draw
-        self.screen.fill(bg_color)
-        self.draw_connections()
-        self.draw_hubs()
-        self.draw_drones()
-        pygame.display.flip()
+            # Re-draw
+            self.screen.fill(bg_color)
+            self.draw_connections()
+            self.draw_hubs()
+            self.draw_drones()
+            pygame.display.flip()
 
     def draw_simulation(self) -> None:
         """Refreshes and paints the current frame of the live simulation.

@@ -26,12 +26,14 @@ class ZoneType(Enum):
     BLOCKED = 'blocked'
     RESTRICTED = 'restricted'
     PRIORITY = 'priority'
+    TRAFFIC = 'traffic'
 
     def get_cost(self) -> int:
         costs = {
             ZoneType.NORMAL: 1,
             ZoneType.RESTRICTED: 2,
             ZoneType.PRIORITY: 1,
+            ZoneType.TRAFFIC: 10,
             ZoneType.BLOCKED: 10000,  # Represents infinity cost
         }
         return costs.get(self, 1)
