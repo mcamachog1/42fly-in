@@ -1,4 +1,4 @@
-.PHONY: clean files install unit_tests activate
+.PHONY: install run debug clean lint lint-strict
 
 VENV := venv
 PYTHON := $(VENV)/bin/python3
@@ -11,6 +11,26 @@ install:
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
 
+run:
+	$(PYTHON) -m src.engine.main
+
+debug:
+	$(PYTHON) -m pdb -m src.engine.main
+
+clean:
+	@find . -name "__pycache__" -type d -exec rm -rf {} +
+
+lint:
+	@clear
+	$(PYTHON) -m flake8 --exclude=.venv,venv,build,dist,__pycache__ .
+	$(PYTHON) -m mypy --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs .
+
+lint-strict:
+	@clear
+	flake8 --exclude=.venv,venv,build,dist,__pycache__ .
+	$(PYTHON) -m mypy . --strict
+
+
 unit_tests:
 	$(PYTHON) -m tests.test_load_model
 #	$(PYTHON) -m tests.test_dijkstra
@@ -18,11 +38,6 @@ unit_tests:
 pygame_test:
 	$(PYTHON) -m pygame.examples.aliens
 
-fly:
-	$(PYTHON) -m src.engine.main
-    
-clean:
-	@find . -name "__pycache__" -type d -exec rm -rf {} +
 
 files:
 	@find . \( -path "./venv" -o -name ".?*" \) -prune -o -print

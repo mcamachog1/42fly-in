@@ -1,7 +1,7 @@
 # model.py
 
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar
 from typing_extensions import Self
 
 try:
@@ -32,9 +32,10 @@ class ZoneType(Enum):
             ZoneType.NORMAL: 1,
             ZoneType.RESTRICTED: 2,
             ZoneType.PRIORITY: 1,
-            ZoneType.BLOCKED: 10000,  # Represents infinity cost       
+            ZoneType.BLOCKED: 10000,  # Represents infinity cost
         }
         return costs.get(self, 1)
+
 
 class Color(Enum):
     RED = 'red'
@@ -45,14 +46,14 @@ class Color(Enum):
     WHITE = 'white'
     GRAY = 'gray'
     ORANGE = 'orange'
-    CYAN = 'cyan'    
+    CYAN = 'cyan'
     PURPLE = 'purple'
     BROWN = 'brown'
     GOLD = 'gold'
     MAROON = 'maroon'
     DARKRED = 'darkred'
     CRIMSON = 'crimson'
-    RESET = '\033[0m'    
+    RESET = '\033[0m'
 
     def get_color(self) -> str:
         cls = type(self)
@@ -60,24 +61,23 @@ class Color(Enum):
             cls.RED: '\033[31m',
             cls.GREEN: '\033[32m',
             cls.BLUE: '\033[34m',
-            cls.YELLOW: '\033[93m',         
-            cls.BLACK: '\033[30m',          
+            cls.YELLOW: '\033[93m',
+            cls.BLACK: '\033[30m',
             cls.WHITE: '\033[37m',
-            cls.GRAY: '\033[90m',           
+            cls.GRAY: '\033[90m',
             cls.ORANGE: '\033[38;5;208m',
-            cls.CYAN: '\033[36m',           
-            cls.PURPLE: '\033[35m',         
-            cls.BROWN: '\033[38;5;94m',     
-            cls.GOLD: '\033[38;5;220m',     
+            cls.CYAN: '\033[36m',
+            cls.PURPLE: '\033[35m',
+            cls.BROWN: '\033[38;5;94m',
+            cls.GOLD: '\033[38;5;220m',
             cls.MAROON: '\033[31;1m',
-            cls.DARKRED: '\033[38;5;124m', 
-            cls.CRIMSON: '\033[38;5;196m', 
+            cls.DARKRED: '\033[38;5;124m',
+            cls.CRIMSON: '\033[38;5;196m',
             cls.RESET: '\033[0m'
             # BG colors begin with 4 or 10
-            # TEXT colors begin with 3 or 9                      
+            # TEXT colors begin with 3 or 9
         }
-        return colors.get(self, '\033[0m')   
-
+        return colors.get(self, '\033[0m')
 
 
 class Hub(BaseModel):
@@ -93,7 +93,7 @@ class Hub(BaseModel):
 
 
 class Connection(BaseModel):
-    META_DATA_KEYS: ClassVar[set[str]] = {'max_link_capacity'}    
+    META_DATA_KEYS: ClassVar[set[str]] = {'max_link_capacity'}
     name: str = Field(min_length=1, max_length=50)
     max_link_capacity: int = Field(ge=1, default=1)
     occupancy: int = 0
@@ -119,7 +119,6 @@ class Map(BaseModel):
     connections: list[Connection]
     drones: list[Drone] = []
 
-
     @model_validator(mode='after')
     def validate_hub_names(self) -> Self:
         used_names: set[str] = set()
@@ -132,7 +131,6 @@ class Map(BaseModel):
                 )
             used_names.add(hub.name)
         return self
-
 
     @model_validator(mode='after')
     def validate_coordinates(self) -> Self:
@@ -161,5 +159,3 @@ class Map(BaseModel):
                 raise ValueError(f"Invalid connection: '{connection.name}'")
             used_connections.add(connection.name)
         return self
-    
-

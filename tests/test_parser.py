@@ -2,10 +2,10 @@
 # test_parser.py
 
 
-from typing import Any
 from src.parser.read_map import read_map
 
 MAP_1 = 'data/maps/easy/01_linear_path.txt'
+
 
 def main() -> None:
     file_name: str = MAP_1

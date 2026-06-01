@@ -2,6 +2,7 @@
 
 from src.model.model import Color, Map
 
+
 def print_map(network: Map, turn: int) -> None:
     print(f"TURNO: {turn} | ", end="")
     for drone in network.drones:

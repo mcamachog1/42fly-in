@@ -1,13 +1,14 @@
 import pygame
-from src.model.model import Hub, Color, ZoneType
+from src.model.model import Hub, Color, ZoneType, Map
 
 
 class Visualizer:
     """Manages the graphical interface and simulation rendering using Pygame.
 
-    This class translates the abstract mathematical drone network model (graph)
-    into a visual display, handling coordinate scaling, map translations, and
-    drawing operations for hubs, connections, and active drones.
+        This class translates the abstract mathematical drone network
+        model (graph) into a visual display, handling coordinate scaling,
+        map translations, and drawing operations for hubs, connections,
+        and active drones.
 
     Attributes:
         RADIUS_HUB (int): Pixel radius used to draw network hubs.
@@ -34,7 +35,13 @@ class Visualizer:
     RADIUS_HUB = 20
     RADIUS_DRONE = 8
 
-    def __init__(self, network, width=1200, height=600, scale=60):
+    def __init__(
+        self,
+        network: Map,
+        width: int = 1200,
+        height: int = 600,
+        scale: int = 100
+    ) -> None:
         """Initializes the Visualizer window and properties.
 
         Args:
@@ -106,7 +113,7 @@ class Visualizer:
         hubs: dict[str, Hub] = {h.name: h for h in self.network.hubs}
         return hubs
 
-    def get_hub_coord(self) -> dict[str, tuple[float, float]]:
+    def get_hub_coord(self) -> dict[str, tuple[int, int]]:
         """Extracts the abstract model coordinates for all existing hubs.
 
         Returns:
@@ -146,9 +153,9 @@ class Visualizer:
     def draw_connections(self) -> None:
         """Renders structural paths connecting hubs on the display surface.
 
-        Colors lines dynamically depending on whether either connecting hub
-        is classified under a restricted, priority, or blocked zone.
-        """
+            Colors lines dynamically depending on whether either connecting hub
+            is classified under a restricted, priority, or blocked zone.
+            """
         for conn in self.network.connections:
             line_color = 'black'
             z1, z2 = conn.name.split('-')
@@ -193,79 +200,66 @@ class Visualizer:
             pos = self.to_pygame_coords(xm, ym)
             self.draw_drone_with_text(pos, str(drone.id))
 
+    def event_action(self, event: pygame.event.Event, bg_color: str) -> None:
+        """Handles core window events such as resizing and closing requests.
 
-    def draw_simulation(self) -> None:
-        """Refreshes and paints the current frame of the live simulation.
-
-        Draws connections, updates hub availability colors, plots drone
-        midpoint transitions, and triggers a physical frame update to
-        the screen display.
+            Args:
+                event (Event): The Pygame event object to evaluate.
+                bg_color (str): The background color name or RGB tuple to fill
+                the screen.
         """
-        bg_color = 'gray'
-        self.screen.fill(bg_color)        
+        # Close window event
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit(0)
+
+        # Resize window
+        if event.type == pygame.VIDEORESIZE:
+            self.width, self.height = event.w, event.h
+            self.screen = pygame.display.set_mode(
+                (self.width, self.height),
+                pygame.RESIZABLE
+            )
+            self.center_x = 0.025 * self.width
+            self.center_y = self.height // 2
+
+        # Re-draw
+        self.screen.fill(bg_color)
         self.draw_connections()
         self.draw_hubs()
         self.draw_drones()
         pygame.display.flip()
-        
+
+    def draw_simulation(self) -> None:
+        """Refreshes and paints the current frame of the live simulation.
+
+            Draws connections, updates hub availability colors, plots drone
+            midpoint transitions, and triggers a physical frame update to
+            the screen display.
+        """
+        bg_color = 'gray'
+        self.screen.fill(bg_color)
+        self.draw_connections()
+        self.draw_hubs()
+        self.draw_drones()
+        pygame.display.flip()
 
         if self.autoplay:
-            for event in pygame.event.get():            
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    import sys
-                    sys.exit(0)
-                # Si el usuario maximiza o cambia el tamaño de la ventana mientras está en pausa
-                elif event.type == pygame.VIDEORESIZE:
-                    self.width, self.height = event.w, event.h
-                    self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
-                    self.center_x = 0.025 * self.width
-                    self.center_y = self.height // 2
-                    
-                    # Volvemos a pintar sobre la marcha para que no se quede la pantalla en negro
-                    self.screen.fill(bg_color)        
-                    self.draw_connections()
-                    self.draw_hubs()
-                    self.draw_drones()
-                    pygame.display.flip()
-                elif event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_SPACE:
-                            self.autoplay = False
-                            print(" [PAUSA] Switched to step-by-step mode.")                        
+            for event in pygame.event.get():
+                self.event_action(event, bg_color)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.autoplay = False
             self.clock.tick(0.5)
-
         else:
-            print(" [PAUSA] Step-by-step mode active. Press SPACEBAR to advance...")
             waiting_for_input = True
             while waiting_for_input:
-                # pygame.event.wait() duerme el programa consumiendo 0% de CPU
+                # Freeze everything until an event occurs
                 event = pygame.event.wait()
-                
-                # Si el usuario hace clic en la 'X' de la ventana, cerramos de inmediato
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    import sys
-                    sys.exit(0)
-                # Si el usuario maximiza o cambia el tamaño de la ventana mientras está en pausa
-                elif event.type == pygame.VIDEORESIZE:
-                    self.width, self.height = event.w, event.h
-                    self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
-                    self.center_x = 0.025 * self.width
-                    self.center_y = self.height // 2
-                    
-                    # Volvemos a pintar sobre la marcha para que no se quede la pantalla en negro
-                    self.screen.fill(bg_color)        
-                    self.draw_connections()
-                    self.draw_hubs()
-                    self.draw_drones()
-                    pygame.display.flip()
-                # Si el usuario presiona una tecla
-                elif event.type == pygame.KEYDOWN:
-                    print(f"{event.key=}  vs {pygame.K_SPACE=}")
-                    # Si es la Barra Espaciadora, rompemos la pausa y dejamos que el main.py continúe
+                self.event_action(event, bg_color)
+                if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         waiting_for_input = False
                     elif event.key == pygame.K_RETURN:
                         self.autoplay = True
                         waiting_for_input = False
-                        print("Switched autoplay mode.")                               

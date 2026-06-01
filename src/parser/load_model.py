@@ -6,6 +6,7 @@ from typing import Any
 
 UNLIMITED_DRONES = 10000
 
+
 def load_map(network: dict[str, Any]) -> Map:
     # Format input for zone objects
     zones: list[dict[str, Any]] = network['zones']
