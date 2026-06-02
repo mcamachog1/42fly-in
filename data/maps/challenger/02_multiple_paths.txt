@@ -1,0 +1,50 @@
+# CHALLENGER LEVEL: MULTIPLE PATHS
+
+nb_drones: 6
+
+# === LAYER 0: The Nightmare Begins ===
+start_hub: start 0 0 [color=green max_drones=15]
+
+# Single-file entry gates (extreme bottleneck)
+hub:  e 0 2 [color=blue max_drones=1]
+hub:  b 2 0 [color=yellow max_drones=1]
+hub:  x 1 0 [color=yellow max_drones=1]
+hub:  c 3 0 [color=yellow max_drones=1]
+hub:  d 4 0 [color=red max_drones=1]
+hub:  a 0 -2 [color=blue max_drones=1]
+
+hub: e1 2 1 [color=purple]
+hub: e2 3 1 [color=purple]
+hub: e3 4 1 [color=purple]
+
+hub: a1 2 -1 [color=purple]
+hub: a2 3 -1 [color=purple]
+hub: a3 4 -1 [color=purple]
+
+end_hub: goal 6 0 [color=green max_drones=15]
+
+# === CONNECTIONS: The Web of Suffering ===
+connection: start-a [max_link_capacity=1]
+connection: start-x [max_link_capacity=1]
+connection: start-e [max_link_capacity=1]
+connection: x-b [max_link_capacity=1]
+
+connection: a-a1 [max_link_capacity=1]
+connection: a-a2 [max_link_capacity=1]
+connection: a-a3 [max_link_capacity=1]
+
+connection: e-e1
+connection: e-e2
+connection: e-e3
+
+connection: b-c
+connection: c-d
+connection: a1-d
+connection: a2-d
+connection: a3-d
+
+connection: e1-d
+connection: e2-d
+connection: e3-d
+
+connection: d-goal
