@@ -232,6 +232,9 @@ class Visualizer:
             self.draw_drones()
             pygame.display.flip()
 
+    def close(self) -> None:
+        pygame.quit()
+
     def draw_simulation(self) -> None:
         """Refreshes and paints the current frame of the live simulation.
 

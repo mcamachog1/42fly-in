@@ -9,79 +9,61 @@ from src.ui.visualizer import Visualizer
 from src.engine.dijkstra import min_cost
 
 
-def print_prepared_turn(network: Map) -> None:
-    print("DRONES TO MOVE")
-    for drone in network.drones:
-        if drone.move:
-            print
-            (
-                f"{drone.id=} - "
-                f"{drone.current_zone.name=} - {drone.preview_zone.name=} - "
-                f"{drone.next_zone.name=}"
-            )
-    print("DRONES TO WAIT")
-    for drone in network.drones:
-        if not drone.move:
-            print
-            (
-                f"{drone.id=} - "
-                f"{drone.current_zone.name=} - {drone.preview_zone.name=} - "
-                f"{drone.next_zone.name=}"
-            )
+class FlyIn:
+    def __init__(self, map_file: str) -> None:
+        self.map_file = map_file
+        self.network: Map = load_map(parse_map(map_file))
+        self.plot = Visualizer(self.network, map_file)
+        self.turn: int = 0
+        self.end_hub: Hub = self.network.lookup_hubs[self.network.end_hub]
 
+    def _free_connection(self, drone: Drone) -> None:
+        conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
+        connect = self.network.lookup_connections[conn_name]
+        connect.occupancy -= 1
 
-def free_connection(drone: Drone, network: Map) -> None:
-    conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
-    connect = network.lookup_connections[conn_name]
-    connect.occupancy -= 1
+    def _move_drone(self, drone: Drone) -> None:
+        if drone.move and drone.travel_duration == 1:
+            drone.preview_zone = drone.current_zone
+            drone.current_zone = drone.next_zone
+            drone.path = drone.path[1:]
+            drone.move = False
+            drone.connection = None
+            self._free_connection(drone)
 
+        # wait if drone will be moving to a restricted zone
+        elif drone.move and drone.travel_duration > 1:
+            drone.travel_duration -= 1
 
-def move_drone(drone: Drone, network: Map) -> None:
-    if drone.move and drone.travel_duration == 1:
-        drone.preview_zone = drone.current_zone
-        drone.current_zone = drone.next_zone
-        drone.path = drone.path[1:]
-        drone.move = False
-        drone.connection = None
-        free_connection(drone, network)
-
-    # wait if drone will be moving to a restricted zone
-    elif drone.move and drone.travel_duration > 1:
-        drone.travel_duration -= 1
-
-
-def fly_in(map_file: str) -> None:
-    network: Map = load_map(parse_map(map_file))
-
-    def begin_simulation() -> None:
+    def _begin_simulation(self) -> None:
         # route is the path with min cost from start_hub to end_hub
         route: tuple[int, list[str]] = min_cost(
-                network,
-                network.start_hub
-                )[network.end_hub]
+                self.network,
+                self.network.start_hub
+                )[self.network.end_hub]
         drones: list[Drone] = []
-        for i in range(1, network.nb_drones + 1):
+        for i in range(1, self.network.nb_drones + 1):
             drone = Drone(
                 id=i,
                 cost=route[0],
                 path=route[1],
-                preview_zone=network.lookup_hubs[network.start_hub],
-                current_zone=network.lookup_hubs[network.start_hub],
-                next_zone=network.lookup_hubs[route[1][1]],
+                preview_zone=self.network.lookup_hubs[self.network.start_hub],
+                current_zone=self.network.lookup_hubs[self.network.start_hub],
+                next_zone=self.network.lookup_hubs[route[1][1]],
             )
             drones.append(drone)
-        network.drones = drones
+        self.network.drones = drones
 
     # Just for drones waiting after the begin simulation
-    def alternative_simulation(drones: list[Drone]) -> None:
+    def _alternative_simulation(self, drones: list[Drone]) -> None:
         for drone in drones:
             if len(drone.path) > 1:
                 try:
                     route: tuple[int, list[str]] = min_cost(
-                            network,
+                            self.network,
                             drone.current_zone.name,
                             [drone.path[1]]
-                            )[network.end_hub]
+                            )[self.network.end_hub]
                     drone.cost = route[0]
                     drone.path = route[1]
                 except KeyError:
@@ -89,33 +71,33 @@ def fly_in(map_file: str) -> None:
 
     # Search optimal solution again for waited nodes without excluding nodes,
     # (only exclude start node)
-    def reset_simulation() -> None:
-        for drone in network.drones:
+    def _reset_simulation(self) -> None:
+        for drone in self.network.drones:
             if not drone.move and len(drone.path) > 1:
                 try:
                     route: tuple[int, list[str]] = min_cost(
-                            network,
+                            self.network,
                             drone.current_zone.name,
-                            [network.start_hub]
-                            )[network.end_hub]
+                            [self.network.start_hub]
+                            )[self.network.end_hub]
                     drone.cost = route[0]
                     drone.path = route[1]
                 except KeyError:
                     continue
 
-    def prepare_turn() -> None:
-        for drone in network.drones:
+    def _prepare_turn(self) -> None:
+        for drone in self.network.drones:
             if drone.move:
                 continue
             if len(drone.path) > 1:
                 # Validate connection
                 conn_name = f"{drone.path[0]}-{drone.path[1]}"
-                connect = network.lookup_connections[conn_name]
+                connect = self.network.lookup_connections[conn_name]
                 if connect.occupancy >= connect.max_link_capacity:
                     drone.move = False
                     continue
                 # Validate zone
-                next_zone: Hub = network.lookup_hubs[drone.path[1]]
+                next_zone: Hub = self.network.lookup_hubs[drone.path[1]]
                 if next_zone.occupancy >= next_zone.max_drones:
                     drone.move = False
                     continue
@@ -132,22 +114,22 @@ def fly_in(map_file: str) -> None:
             else:
                 drone.move = False
 
-    begin_simulation()
-    plot = Visualizer(network, map_file)
-    turn: int = 0
-    end_hub: Hub = network.lookup_hubs[network.end_hub]
-    while end_hub.occupancy < network.nb_drones:
-        turn += 1
-        prepare_turn()
-        wait_list = [drone for drone in network.drones if not drone.move]
-        if len(wait_list) > 0:
-            alternative_simulation(wait_list)
-        prepare_turn()
-        for drone in network.drones:
-            move_drone(drone, network)
-        print_map(network, turn)
-        plot.draw_simulation()
-        reset_simulation()
+    def run(self) -> None:
+        self._begin_simulation()
+
+        while self.end_hub.occupancy < self.network.nb_drones:
+            self.turn += 1
+            self._prepare_turn()
+            wait_list = [d for d in self.network.drones if not d.move]
+            if len(wait_list) > 0:
+                self._alternative_simulation(wait_list)
+            self._prepare_turn()
+            for drone in self.network.drones:
+                self._move_drone(drone)
+            print_map(self.network, self.turn)
+            self.plot.draw_simulation()
+            self._reset_simulation()
+        self.plot.close()
 
 
 if __name__ == "__main__":
@@ -167,7 +149,8 @@ if __name__ == "__main__":
     ]
 
     for map in maps:
-        fly_in(map)
+        flyin = FlyIn(map)
+        flyin.run()
         print(map)
         option: int = int(input('Continue(1) - Quit(0): '))
         if option == 0:
