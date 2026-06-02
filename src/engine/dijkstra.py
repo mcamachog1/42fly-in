@@ -2,7 +2,7 @@
 
 from typing import Optional
 from heapq import heappush, heappop
-from src.model.model import Map, ZoneType
+from src.model.model import Map
 
 
 def adjacent_zones(
@@ -42,7 +42,7 @@ def min_cost(
             continue
         neighbours = adjacent_zones(network, zone, exclude)
         for neighbor in neighbours:
-            new_cost = cost + get_hub_object[neighbor].zone.get_cost()
+            new_cost = cost + get_hub_object[neighbor].inner_cost
             new_path = path[:]
             new_path.append(neighbor)
             low_cost = lower_cost.get(neighbor, (float('inf'), None))[0]
@@ -50,10 +50,10 @@ def min_cost(
                 lower_cost[neighbor] = new_cost, new_path
                 heappush(heap, (new_cost, neighbor, new_path))
             # Condition to give priority to PRIORITY TypeZone
-            elif (
-                new_cost == low_cost and
-                get_hub_object[neighbor].zone.name == ZoneType.PRIORITY.name
-            ):
-                lower_cost[neighbor] = new_cost, new_path
-                heappush(heap, (new_cost, neighbor, new_path))
+            # elif (
+            #     new_cost == low_cost and
+            #     get_hub_object[neighbor].zone.name == ZoneType.PRIORITY.name
+            # ):
+            #     lower_cost[neighbor] = new_cost, new_path
+            #     heappush(heap, (new_cost, neighbor, new_path))
     return lower_cost

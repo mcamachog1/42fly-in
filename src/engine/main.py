@@ -75,7 +75,6 @@ def move_drone(drone: Drone, network: Map) -> None:
         drone.travel_duration -= 1
         
 
-
 def fly_in(map_file: str) -> None:
     network: Map = load_map(parse_map(map_file))
 
@@ -118,6 +117,7 @@ def fly_in(map_file: str) -> None:
     def reset_simulation() -> None:
         for drone in network.drones:
             if not drone.move and len(drone.path) > 1:
+            #if len(drone.path) > 1:            
                 try:
                     route: tuple[int, list[str]] = min_cost(
                             network,
@@ -129,22 +129,18 @@ def fly_in(map_file: str) -> None:
                 except KeyError:
                     continue
 
-    def get_full_hubs() -> list[str]:
-        full: list[str] = []
+    def traffic_flow():
+        network.initialize_cost_zone()
         for hub in network.hubs:
             traffic_rate = hub.occupancy / hub.max_drones
-            if traffic_rate > 0.9:
-                full.append(hub.name)
-                hub.zone = ZoneType.TRAFFIC
-        return full
-
-
-    def traffic_simulation() -> None:
-        traffic_flow = (get_hub_object(network.start_hub, network).occupancy + get_hub_object(network.end_hub, network).occupancy) / network.nb_drones
-        if traffic_flow < 0.4:
-            exclude = get_full_hubs()
-            print(f"{exclude=}")
-
+            if traffic_rate >= 0.9:
+                hub.inner_cost = hub.cost * 4
+            elif traffic_rate >= 0.6:
+                hub.inner_cost = hub.cost * 2
+            elif traffic_rate >= 0.4:
+                hub.inner_cost = hub.cost * 1.5
+            else:
+                hub.inner_cost = hub.cost          
 
     def prepare_turn() -> None:
         for drone in network.drones:
@@ -180,34 +176,36 @@ def fly_in(map_file: str) -> None:
     plot = Visualizer(network)
     turn: int = 0
     end_hub: Hub = get_hub_object(network.end_hub, network)
+    print(f"{network.nb_drones=} {len(network.hubs)=} {len(network.connections)=}")
     while end_hub.occupancy < network.nb_drones:
         turn += 1
         prepare_turn()
-        wait_list = [drone for drone in network.drones if not drone.move]
-        if len(wait_list) > 0:
-            alternative_simulation(wait_list)
-        prepare_turn()
+        if network.nb_drones / len(network.connections) >= 0.6:
+            wait_list = [drone for drone in network.drones if not drone.move]
+            if len(wait_list) > 0:
+                alternative_simulation(wait_list)
+            prepare_turn()
         for drone in network.drones:
             move_drone(drone, network)
         print_map(network, turn)
         plot.draw_simulation()
-        traffic_simulation()
+        traffic_flow()
         reset_simulation()
 
 
 if __name__ == "__main__":
 
     maps: list[str] = [
-        # 'data/maps/easy/01_linear_path.txt',
-        # 'data/maps/easy/02_simple_fork.txt',
-        # 'data/maps/easy/03_basic_capacity.txt',
-        #  'data/maps/medium/01_dead_end_trap.txt',
-        #  'data/maps/medium/02_circular_loop.txt',
-        # 'data/maps/medium/03_priority_puzzle.txt',
-        #  'data/maps/hard/01_maze_nightmare.txt',
-        # 'data/maps/hard/02_capacity_hell.txt',
-        #  'data/maps/hard/03_ultimate_challenge.txt',
-         'data/maps/challenger/01_the_impossible_dream.txt',
+        'data/maps/easy/01_linear_path.txt',
+        'data/maps/easy/02_simple_fork.txt',
+        'data/maps/easy/03_basic_capacity.txt',
+        'data/maps/medium/01_dead_end_trap.txt',
+        'data/maps/medium/02_circular_loop.txt',
+        'data/maps/medium/03_priority_puzzle.txt',
+        'data/maps/hard/01_maze_nightmare.txt',
+        'data/maps/hard/02_capacity_hell.txt',
+        'data/maps/hard/03_ultimate_challenge.txt',
+        'data/maps/challenger/01_the_impossible_dream.txt',
     ]
 
     for map in maps:

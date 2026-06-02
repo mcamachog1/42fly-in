@@ -40,7 +40,7 @@ class Visualizer:
         network: Map,
         width: int = 1200,
         height: int = 600,
-        scale: int = 80
+        scale: int = 55
     ) -> None:
         """Initializes the Visualizer window and properties.
 

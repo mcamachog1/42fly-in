@@ -14,6 +14,8 @@ except ImportError:
     print("Import Pydantic")
     exit(1)
 
+# Represents infinity cost for type int
+INT_INFINITY = 10000
 
 class HubPrefix(Enum):
     HUB = 'hub'
@@ -26,17 +28,15 @@ class ZoneType(Enum):
     BLOCKED = 'blocked'
     RESTRICTED = 'restricted'
     PRIORITY = 'priority'
-    TRAFFIC = 'traffic'
 
-    def get_cost(self) -> int:
-        costs = {
-            ZoneType.NORMAL: 1,
-            ZoneType.RESTRICTED: 2,
-            ZoneType.PRIORITY: 1,
-            ZoneType.TRAFFIC: 10,
-            ZoneType.BLOCKED: 10000,  # Represents infinity cost
-        }
-        return costs.get(self, 1)
+    # def get_cost(self) -> int:
+    #     costs = {
+    #         ZoneType.NORMAL: 1,
+    #         ZoneType.RESTRICTED: 2,
+    #         ZoneType.PRIORITY: 1,
+    #         ZoneType.BLOCKED: INT_INFINITY,
+    #     }
+    #     return costs.get(self, 1)
 
 
 class Color(Enum):
@@ -92,6 +92,8 @@ class Hub(BaseModel):
     color: Color = Field(default=Color.WHITE)
     max_drones: int = Field(ge=1, default=1)
     occupancy: int = 0
+    cost: int = 1
+    inner_cost: float = 0  # for been used in the algorithm
 
 
 class Connection(BaseModel):
@@ -147,7 +149,7 @@ class Map(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def validate_connectiomaze_nightmaren(self) -> Self:
+    def validate_connection(self) -> Self:
         used_connections: set[str] = set()
         valid_names: set[str] = {hub.name for hub in self.hubs}
         for connection in self.connections:
@@ -160,4 +162,21 @@ class Map(BaseModel):
             if zone1 not in valid_names or zone2 not in valid_names:
                 raise ValueError(f"Invalid connection: '{connection.name}'")
             used_connections.add(connection.name)
+        return self
+
+    @model_validator(mode='after')
+    def initialize_cost_zone(self) -> Self:
+        for zone in self.hubs:
+            if zone.zone == ZoneType.NORMAL:
+                zone.inner_cost = 1
+                zone.cost = 1
+            if zone.zone == ZoneType.PRIORITY:
+                zone.inner_cost = 0
+                zone.cost = 1
+            elif zone.zone == ZoneType.RESTRICTED:
+                zone.inner_cost = 2
+                zone.cost = 2
+            elif zone.zone == ZoneType.BLOCKED:
+                zone.inner_cost = float('inf')
+                zone.cost = INT_INFINITY
         return self
