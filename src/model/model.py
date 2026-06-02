@@ -17,6 +17,7 @@ except ImportError:
 # Represents infinity cost for type int
 INT_INFINITY = 10000
 
+
 class HubPrefix(Enum):
     HUB = 'hub'
     START = 'start_hub'
@@ -29,14 +30,14 @@ class ZoneType(Enum):
     RESTRICTED = 'restricted'
     PRIORITY = 'priority'
 
-    # def get_cost(self) -> int:
-    #     costs = {
-    #         ZoneType.NORMAL: 1,
-    #         ZoneType.RESTRICTED: 2,
-    #         ZoneType.PRIORITY: 1,
-    #         ZoneType.BLOCKED: INT_INFINITY,
-    #     }
-    #     return costs.get(self, 1)
+    def get_cost(self) -> int:
+        costs = {
+            ZoneType.NORMAL: 1,
+            ZoneType.RESTRICTED: 2,
+            ZoneType.PRIORITY: 1,
+            ZoneType.BLOCKED: INT_INFINITY,
+        }
+        return costs.get(self, 1)
 
 
 class Color(Enum):
@@ -93,7 +94,6 @@ class Hub(BaseModel):
     max_drones: int = Field(ge=1, default=1)
     occupancy: int = 0
     cost: int = 1
-    inner_cost: float = 0  # for been used in the algorithm
 
 
 class Connection(BaseModel):
@@ -122,6 +122,9 @@ class Map(BaseModel):
     end_hub: str
     connections: list[Connection]
     drones: list[Drone] = []
+    lookup_hubs: dict[str, Hub] = {}
+    lookup_hub_coords: dict[str, tuple[int, int]] = {}
+    lookup_connections: dict[str, Connection] = {}
 
     @model_validator(mode='after')
     def validate_hub_names(self) -> Self:
@@ -168,15 +171,52 @@ class Map(BaseModel):
     def initialize_cost_zone(self) -> Self:
         for zone in self.hubs:
             if zone.zone == ZoneType.NORMAL:
-                zone.inner_cost = 1
                 zone.cost = 1
             if zone.zone == ZoneType.PRIORITY:
-                zone.inner_cost = 0
                 zone.cost = 1
             elif zone.zone == ZoneType.RESTRICTED:
-                zone.inner_cost = 2
                 zone.cost = 2
             elif zone.zone == ZoneType.BLOCKED:
-                zone.inner_cost = float('inf')
                 zone.cost = INT_INFINITY
         return self
+
+    @model_validator(mode='after')
+    def initialize_lookups(self) -> Self:
+        self.lookup_hubs = self._lookup_hubs()
+        self.lookup_hub_coords = self._lookup_hub_coords()
+        self.lookup_connections = self._lookup_connections()
+        return self
+
+    def _lookup_connections(self) -> dict[str, Connection]:
+        conn_objects: dict[str, Connection] = {
+            c.name: c for c in self.connections
+        }
+        # Make conmmutative names
+        swap_names: dict[str, Connection] = {}
+        for name, obj in conn_objects.items():
+            z1, z2 = name.split('-')
+            swap_names[f"{z2}-{z1}"] = obj
+        conn_total = conn_objects | swap_names
+        return conn_total
+
+    def _lookup_hubs(self) -> dict[str, Hub]:
+        """Creates an easy-lookup dictionary linking hub names to Hub objects.
+
+        Returns:
+            dict[str, Hub]: Dictionary where keys are hub names (strings) and
+            values are Hub object references.
+        """
+        hubs: dict[str, Hub] = {h.name: h for h in self.hubs}
+        return hubs
+
+    def _lookup_hub_coords(self) -> dict[str, tuple[int, int]]:
+        """Extracts the abstract model coordinates for all existing hubs.
+
+        Returns:
+            dict[str, tuple[float, float]]: Dictionary mapping hub names to
+            their raw (x, y) positions.
+        """
+        coords = {}
+        for hub in self.hubs:
+            coords[hub.name] = (hub.x, hub.y)
+        return coords

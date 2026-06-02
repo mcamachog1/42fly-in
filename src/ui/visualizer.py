@@ -1,5 +1,5 @@
 import pygame
-from src.model.model import Hub, Color, ZoneType, Map, Connection
+from src.model.model import Color, ZoneType, Map
 
 
 class Visualizer:
@@ -38,6 +38,7 @@ class Visualizer:
     def __init__(
         self,
         network: Map,
+        filename: str,
         width: int = 1200,
         height: int = 600,
         scale: int = 55
@@ -63,9 +64,9 @@ class Visualizer:
 
         # Model properties
         self.network = network
-        self.hub_coord = self.get_hub_coord()
-        self.hubs = self.get_hub_object()
-        self.conns = self.get_conn_object()        
+        self.hub_coords = self.network.lookup_hub_coords
+        self.hubs = self.network.lookup_hubs
+        self.conns = self.network.lookup_connections
 
         # Display mode autoplay vs step by step
         self.autoplay = False
@@ -75,7 +76,7 @@ class Visualizer:
             (width, height),
             pygame.RESIZABLE
         )
-        pygame.display.set_caption("Fly-in Drone Simulator")
+        pygame.display.set_caption(filename)
         pygame.font.init()
         self.font = pygame.font.SysFont(None, 14)
 
@@ -103,41 +104,6 @@ class Visualizer:
         pygame_x = int(self.center_x + scaled_x)
         pygame_y = int(self.center_y - scaled_y)
         return pygame_x, pygame_y
-
-    def get_hub_object(self) -> dict[str, Hub]:
-        """Creates an easy-lookup dictionary linking hub names to Hub objects.
-
-        Returns:
-            dict[str, Hub]: Dictionary where keys are hub names (strings) and
-            values are Hub object references.
-        """
-        hubs: dict[str, Hub] = {h.name: h for h in self.network.hubs}
-        return hubs
-
-    def get_conn_object(self) -> dict[str, Connection]:
-
-        conn_objects: dict[str, Connection] = {
-            c.name: c for c in self.network.connections
-        }
-        # Make conmmutative names
-        swap_names: dict[str, Connection] = {}
-        for name, obj in conn_objects.items():
-            z1, z2 = name.split('-')
-            swap_names[f"{z2}-{z1}"] = obj
-        conn_total = conn_objects | swap_names
-        return conn_total
-
-    def get_hub_coord(self) -> dict[str, tuple[int, int]]:
-        """Extracts the abstract model coordinates for all existing hubs.
-
-        Returns:
-            dict[str, tuple[float, float]]: Dictionary mapping hub names to
-            their raw (x, y) positions.
-        """
-        coords = {}
-        for hub in self.network.hubs:
-            coords[hub.name] = (hub.x, hub.y)
-        return coords
 
     def draw_drone_with_text(
         self,
@@ -173,8 +139,8 @@ class Visualizer:
         for conn in self.network.connections:
             line_color = 'black'
             z1, z2 = conn.name.split('-')
-            z1x, z1y = self.to_pygame_coords(*self.hub_coord[z1])
-            z2x, z2y = self.to_pygame_coords(*self.hub_coord[z2])
+            z1x, z1y = self.to_pygame_coords(*self.hub_coords[z1])
+            z2x, z2y = self.to_pygame_coords(*self.hub_coords[z2])
             if (
                 # self.hubs[z1].zone.name == ZoneType.RESTRICTED.name or
                 self.hubs[z2].zone.name == ZoneType.RESTRICTED.name
@@ -201,26 +167,26 @@ class Visualizer:
     def draw_hubs(self) -> None:
         """Renders all operational network hubs as distinct colored circles."""
         for hub in self.network.hubs:
-            pos = self.to_pygame_coords(*self.hub_coord[hub.name])
+            pos = self.to_pygame_coords(*self.hub_coords[hub.name])
             color = hub.color.value
             pygame.draw.circle(self.screen, color, pos, self.RADIUS_HUB)
 
     def draw_drones(self) -> None:
 
-        delta: dict[str, int] = {h.name: 0 for h in self.network.hubs}
+        delta: dict[str, float] = {h.name: 0 for h in self.network.hubs}
         for c in self.network.connections:
             delta[c.name] = 0
         for drone in self.network.drones:
             # When drone stay in one connection (restricted zone)
-            if drone.connection != None:
+            if drone.connection is not None:
                 xm = (drone.current_zone.x + drone.next_zone.x) / 2
                 ym = (drone.current_zone.y + drone.next_zone.y) / 2
                 if self.conns[drone.connection].occupancy > 1:
                     delta[drone.connection] += 0.15
                     xm -= delta[drone.connection]
-                elif self.conns[drone.connection].occupancy  == 1:
+                elif self.conns[drone.connection].occupancy == 1:
                     delta[drone.connection] = 0
-             # Normal zones
+            # Normal zones
             else:
                 xm = drone.current_zone.x
                 ym = drone.current_zone.y
@@ -233,7 +199,7 @@ class Visualizer:
                         xm -= delta[drone.current_zone.name]
                     elif drone.current_zone.occupancy == 1:
                         delta[drone.current_zone.name] = 0
-                
+
             pos = self.to_pygame_coords(xm, ym)
             self.draw_drone_with_text(pos, str(drone.id))
 
