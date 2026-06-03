@@ -136,7 +136,7 @@ class FlyIn:
                                     [self.network.start_hub, drone.path[1]]
                                     )[self.network.end_hub]
             except KeyError:
-                # Case in which there are not alternative path. It is ignore
+                # Case in which there are not alternative path, it is ignore.
                 pass
             except IndexError as e:
                 print(
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         'data/maps/challenger/02_multiple_paths.txt',
     ]
 
-    show_graphics = False
+    show_graphics = True
     for map in maps:
         flyin = FlyIn(map, show_graphics)
         flyin.run()
