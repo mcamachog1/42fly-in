@@ -138,6 +138,12 @@ class FlyIn:
             except KeyError:
                 # Case in which there are not alternative path. It is ignore
                 pass
+            except IndexError as e:
+                print(
+                    f"ERROR in function '_improve_simulation' {e}",
+                    file=stderr
+                )
+                exit(1)
             finally:
                 if (drone.cost - drone.accum_cost) + 1 > new_cost:
                     drone.path = new_path
