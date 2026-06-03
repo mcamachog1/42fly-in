@@ -35,9 +35,11 @@ The network topology and real-time drone movements can be rendered graphically. 
   - `RED`: When the next zone is a **RESTRICTED** zone.
   - `GRAY`: When the next zone is a **BLOCKED** zone.
 
-## Input file
-This is an example of a graphic network and the corresponding input network file configuration (.txt)  
-![Simple linear path network](/readme_img/01_easy.png)
+## Input file example
+
+This is an example of a graphic network and the corresponding input network file configuration (.txt)
+
+![Simple linear path network](assets/images/01_easy.png)
 
 
     nb_drones: 2
@@ -51,6 +53,12 @@ This is an example of a graphic network and the corresponding input network file
     connection: waypoint1-waypoint2
     connection: waypoint2-goal
   
+
+## Running Simulation
+
+### Terminal
+
+### GUI (pygame)
 
 
 1.- Create virtual environment
