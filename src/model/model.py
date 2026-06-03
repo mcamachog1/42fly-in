@@ -115,6 +115,7 @@ class Drone(BaseModel):
     connection: None | str = None
     path: list[str] = []
     cost: int = 0
+    accum_cost: int = 0
     move: bool = False
     travel_duration: int = 1  # cost in turns for next movement
 
