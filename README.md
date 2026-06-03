@@ -29,7 +29,7 @@ Connections are bidirectional and must respect the *max_link_capacity* constrain
 
 ## Visual Representation
 
-The network topology and real-time drone movements can be rendered graphically. Components are color-coded based on the input configuration file and the following state rules:
+The network topology and real-time drone movements are rendered graphically. Components are color-coded based on the input configuration file and the following state rules:
 
 - **Zones:** Each zone (Hub) is rendered using the custom color assigned within the network configuration file.
 - **Connections:** Connections are rendered dynamically based on the type of the **destination zone**:
