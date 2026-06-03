@@ -12,6 +12,7 @@ The requirements are:
 - The simulation needs to meet zone and connection capacity constraints
 
 ## Zone Types and costs
+
 | Zone Type  |   Cost   |
 | ---------- | -------- |
 | NORMAL     |    1     |
@@ -23,13 +24,16 @@ Zones must respect the *max_drones* constraint
 **tie-breaking rule**: Even though NORMAL and PRIORITY have the same cost, PRIORITY must take precedence over NORMAL whenever possible.
 
 ## Connections
+
 Connections are bidirectional and must respect the *max_link_capacity* constraint.
 
 ## Visual Representation
+
 The network topology and real-time drone movements can be rendered graphically. Components are color-coded based on the input configuration file and the following state rules:
 
 - **Zones:** Each zone (Hub) is rendered using the custom color assigned within the network configuration file.
 - **Connections:** Connections are rendered dynamically based on the type of the **destination zone**:
+
   - `BLACK`: When the next zone is a **NORMAL** zone.
   - `BLUE`: When the next zone is a **PRIORITY** zone.
   - `RED`: When the next zone is a **RESTRICTED** zone.
@@ -40,6 +44,7 @@ The network topology and real-time drone movements can be rendered graphically. 
 This is an example of a graphic network and the corresponding input network file configuration (.txt)
 
 ![Simple linear path network](assets/images/01_easy.png)
+
 
 
     nb_drones: 2
@@ -59,9 +64,12 @@ This is an example of a graphic network and the corresponding input network file
 ### Terminal
 
  A line list all the drone movements that occur during each turn, spaceseparated. Each movement follow the format: D<ID>-<zone>, or D<ID>-<connection> in case of drones still in flight toward restricted zones.
+
 ◦ D<ID> refers to the unique drone identifier (e.g., D1, D2).
 ◦ <zone> is the name of the destination zone.
 ◦ <connection> is the name of the connection toward a restricted zone.
+
+![Terminal simulation](assets/videos/01_easy_terminal.gif)
 
 ### GUI (pygame)
 
