@@ -1,5 +1,6 @@
 # model.py
 
+from sys import maxsize
 from enum import Enum
 from typing import ClassVar
 from typing_extensions import Self
@@ -13,9 +14,6 @@ try:
 except ImportError:
     print("Import Pydantic")
     exit(1)
-
-# Represents infinity cost for type int
-INT_INFINITY = 10000
 
 
 class HubPrefix(Enum):
@@ -35,7 +33,7 @@ class ZoneType(Enum):
             ZoneType.NORMAL: 1,
             ZoneType.RESTRICTED: 2,
             ZoneType.PRIORITY: 1,
-            ZoneType.BLOCKED: INT_INFINITY,
+            ZoneType.BLOCKED: maxsize,
         }
         return costs.get(self, 1)
 
@@ -182,7 +180,7 @@ class Map(BaseModel):
             elif zone.zone == ZoneType.RESTRICTED:
                 zone.cost = 2
             elif zone.zone == ZoneType.BLOCKED:
-                zone.cost = INT_INFINITY
+                zone.cost = maxsize
         return self
 
     @model_validator(mode='after')

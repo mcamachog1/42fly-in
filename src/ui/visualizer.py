@@ -201,7 +201,13 @@ class Visualizer:
             pos = self.to_pygame_coords(*self.hub_coords[hub.name])
             color = hub.color.value
             pygame.draw.circle(self.screen, color, pos, self.RADIUS_HUB)
-            pygame.draw.circle(self.screen, (0, 0, 0), pos, self.RADIUS_HUB, width=2)            
+            pygame.draw.circle(
+                self.screen,
+                (0, 0, 0),
+                pos,
+                self.RADIUS_HUB,
+                width=2
+            )
             self.draw_hub_text(pos, hub)
 
     def draw_drones(self) -> None:

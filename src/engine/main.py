@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # main.py
 
+from sys import stderr, maxsize
 from src.parser.parse_map import parse_map
 from src.parser.load_model import load_map
-from src.model.model import Map, Drone, Hub, ZoneType, INT_INFINITY
+from src.model.model import Map, Drone, Hub, ZoneType
 from src.ui.print_map import print_map
 from src.ui.visualizer import Visualizer
 from src.engine.dijkstra import min_cost
@@ -18,26 +19,6 @@ class FlyIn:
             self.plot = Visualizer(self.network, map_file)
         self.turn: int = 0
         self.end_hub: Hub = self.network.lookup_hubs[self.network.end_hub]
-
-
-    def _print_prepared_turn(self) -> None:
-        print("DRONES TO MOVE")
-        for drone in self.network.drones:
-            if drone.move:
-                print(
-                    f"{drone.id=} - "
-                    f"{drone.current_zone.name=} - "
-                    f"{drone.next_zone.name=}"
-                )
-        print("DRONES TO WAIT")
-        for drone in self.network.drones:
-            if not drone.move:
-                print(
-                    f"{drone.id=} - "
-                    f"{drone.current_zone.name=} - "
-                    f"{drone.next_zone.name=}"
-                )
-
 
     def _free_connection(self, drone: Drone) -> None:
         conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
@@ -69,7 +50,7 @@ class FlyIn:
                 self.network.start_hub
                 )[self.network.end_hub]
         drones: list[Drone] = []
-        
+
         for i in range(1, self.network.nb_drones + 1):
             drone = Drone(
                 id=i,
@@ -82,38 +63,6 @@ class FlyIn:
             drones.append(drone)
         self.network.drones = drones
 
-
-    # Just for drones waiting after the begin simulation
-    # def _alternative_simulation(self, drones: list[Drone]) -> None:
-    #     for drone in drones:
-    #         if len(drone.path) > 1:
-    #             try:
-    #                 route: tuple[int, list[str]] = min_cost(
-    #                         self.network,
-    #                         drone.current_zone.name,
-    #                         [drone.path[1]]
-    #                         )[self.network.end_hub]
-    #                 drone.cost = route[0]
-    #                 drone.path = route[1]
-    #             except KeyError:
-    #                 continue
-
-    # Search optimal solution again for waited nodes without excluding nodes,
-    # (only exclude start node)
-    # def _reset_simulation(self) -> None:
-    #     for drone in self.network.drones:
-    #         if not drone.move and len(drone.path) > 1:
-    #             try:
-    #                 route: tuple[int, list[str]] = min_cost(
-    #                         self.network,
-    #                         drone.current_zone.name,
-    #                         [self.network.start_hub]
-    #                         )[self.network.end_hub]
-    #                 drone.cost = route[0]
-    #                 drone.path = route[1]
-    #             except KeyError:
-    #                 continue
-
     def _book_connection(self, drone: Drone) -> bool:
         try:
             conn_name = f"{drone.path[0]}-{drone.path[1]}"
@@ -123,9 +72,8 @@ class FlyIn:
                 return False
             return True
         except IndexError as e:
-            print(f"ERROR in function '_book_connection' {e}")
+            print(f"ERROR in function '_book_connection' {e}", file=stderr)
             exit(1)
-            
 
     def _book_hub(self, drone: Drone) -> bool:
         try:
@@ -135,7 +83,7 @@ class FlyIn:
                 return False
             return True
         except IndexError as e:
-            print(f"ERROR in function '_book_hub' {e}")
+            print(f"ERROR in function '_book_hub' {e}", file=stderr)
             exit(1)
 
     def _book(self, drone: Drone) -> None:
@@ -152,9 +100,9 @@ class FlyIn:
             # Check for restricted zones
             if next_zone.zone.name == ZoneType.RESTRICTED.name:
                 drone.travel_duration = 2
-                drone.connection = conn_name                     
+                drone.connection = conn_name
         except IndexError as e:
-            print(f"ERROR in function '_book' {e}")
+            print(f"ERROR in function '_book' {e}", file=stderr)
             exit(1)
 
     def _book_all_drones(self) -> None:
@@ -170,10 +118,9 @@ class FlyIn:
             else:
                 drone.move = False
 
-
     def _improve_simulation(self) -> None:
         drones_waiting = [d for d in self.network.drones if not d.move]
-        new_cost = INT_INFINITY
+        new_cost = maxsize
         # Update path
         for drone in drones_waiting:
             try:
@@ -183,41 +130,32 @@ class FlyIn:
                                     drone.current_zone.name,
                                     )[self.network.end_hub]
                 elif drone.next_zone.name != self.network.end_hub:
-                    # print(drone.path)
                     new_cost, new_path = min_cost(
                                     self.network,
                                     drone.current_zone.name,
                                     [self.network.start_hub, drone.path[1]]
                                     )[self.network.end_hub]
-
-            except KeyError as e:
-                print(e)
-                #exit(1)
-
-            finally:                
+            except KeyError:
+                # Case in which there are not alternative path. It is ignore
+                pass
+            finally:
                 if (drone.cost - drone.accum_cost) + 1 > new_cost:
                     drone.path = new_path
                     drone.cost = drone.accum_cost + new_cost
         self._book_all_drones()
 
-    def statistics(self) -> any:
-        drone_cost: dict[str, int] = {f"D{d.id}": d.cost for d in self.network.drones}
-        # for d in self.network.drones:
-        #     drone_cost[f"D{d.id}"] = d.cost
+    def statistics(self) -> dict[str, int]:
+        drone_cost: dict[str, int] = {
+            f"D{d.id}": d.cost for d in self.network.drones
+        }
         return drone_cost
 
     def run(self) -> None:
         self._begin_simulation()
-        # self._print_prepared_turn()
         while self.end_hub.occupancy < self.network.nb_drones:
             self.turn += 1
             self._book_all_drones()
             self._improve_simulation()
-            # self._print_prepared_turn()
-            # wait_list = [d for d in self.network.drones if not d.move]
-            # if len(wait_list) > 0:
-            #     self._alternative_simulation(wait_list)
-            # self._prepare_turn()
             for drone in self.network.drones:
                 self._move_drone(drone)
             print_map(self.network, self.turn)
@@ -240,14 +178,16 @@ if __name__ == "__main__":
         'data/maps/hard/01_maze_nightmare.txt',
         'data/maps/hard/02_capacity_hell.txt',
         'data/maps/hard/03_ultimate_challenge.txt',
-        'data/maps/challenger/02_multiple_paths.txt',
         'data/maps/challenger/01_the_impossible_dream.txt',
+        'data/maps/challenger/02_multiple_paths.txt',
     ]
 
+    show_graphics = False
     for map in maps:
-        flyin = FlyIn(map, True)
+        flyin = FlyIn(map, show_graphics)
         flyin.run()
-        print(map)
+        print(f"file name: {map}")
+        print("=== Statistics ===")
         print(flyin.statistics())
         option: int = int(input('Continue(1) - Quit(0): '))
         if option == 0:
