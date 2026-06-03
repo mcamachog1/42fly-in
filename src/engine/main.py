@@ -188,7 +188,7 @@ if __name__ == "__main__":
         'data/maps/challenger/02_multiple_paths.txt',
     ]
 
-    show_graphics = True
+    show_graphics = False
     for map in maps:
         flyin = FlyIn(map, show_graphics)
         flyin.run()

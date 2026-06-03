@@ -58,7 +58,14 @@ This is an example of a graphic network and the corresponding input network file
 
 ### Terminal
 
+ A line list all the drone movements that occur during each turn, spaceseparated. Each movement follow the format: D<ID>-<zone>, or D<ID>-<connection> in case of drones still in flight toward restricted zones.
+◦ D<ID> refers to the unique drone identifier (e.g., D1, D2).
+◦ <zone> is the name of the destination zone.
+◦ <connection> is the name of the connection toward a restricted zone.
+
 ### GUI (pygame)
+
+![GUI simulation](assets/videos/01_easy.gif)
 
 
 1.- Create virtual environment
