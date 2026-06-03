@@ -56,6 +56,8 @@ class Color(Enum):
     MAROON = 'maroon'
     DARKRED = 'darkred'
     CRIMSON = 'crimson'
+    LIME = 'lime'
+    MAGENTA = 'magenta'
     RESET = '\033[0m'
 
     def get_color(self) -> str:
@@ -76,6 +78,8 @@ class Color(Enum):
             cls.MAROON: '\033[31;1m',
             cls.DARKRED: '\033[38;5;124m',
             cls.CRIMSON: '\033[38;5;196m',
+            cls.LIME: '\033[92m',
+            cls.MAGENTA: '\033[38;5;201m',
             cls.RESET: '\033[0m'
             # BG colors begin with 4 or 10
             # TEXT colors begin with 3 or 9

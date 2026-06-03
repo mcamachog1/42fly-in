@@ -1,5 +1,5 @@
 import pygame
-from src.model.model import Color, ZoneType, Map
+from src.model.model import Color, ZoneType, Map, Hub
 
 
 class Visualizer:
@@ -32,7 +32,7 @@ class Visualizer:
             text.
     """
 
-    RADIUS_HUB = 20
+    RADIUS_HUB = 22
     RADIUS_DRONE = 8
 
     def __init__(
@@ -164,12 +164,44 @@ class Visualizer:
                 2
             )
 
+    def draw_hub_text(
+        self,
+        center_pos: tuple[int, int],
+        zone: Hub
+    ) -> None:
+        """Draws a hub as a circle containing its identifying ID text.
+
+        Args:
+            center_pos (tuple[int, int]): Screen pixel position (x, y) where
+                the hub will be rendered.
+            text (str): The identification label (e.g., hub name) to display
+                inside the circle.
+        """
+
+        transparent_surface = pygame.Surface(center_pos, pygame.SRCALPHA)
+        circle_color = (0, 0, 0, 0)
+        pygame.draw.circle(
+            transparent_surface,
+            circle_color,
+            center_pos,
+            self.RADIUS_HUB
+        )
+        font_color = Color.WHITE.value
+        # breakpoint()
+        if zone.color.name in [Color.WHITE.name, Color.YELLOW.name]:
+            font_color = Color.BLACK.value
+        text_surface = self.font.render(zone.name, True, font_color)
+        text_rect = text_surface.get_rect()
+        text_rect.center = center_pos
+        self.screen.blit(text_surface, text_rect)
+
     def draw_hubs(self) -> None:
         """Renders all operational network hubs as distinct colored circles."""
         for hub in self.network.hubs:
             pos = self.to_pygame_coords(*self.hub_coords[hub.name])
             color = hub.color.value
             pygame.draw.circle(self.screen, color, pos, self.RADIUS_HUB)
+            self.draw_hub_text(pos, hub)
 
     def draw_drones(self) -> None:
 
