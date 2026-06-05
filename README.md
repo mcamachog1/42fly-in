@@ -6,7 +6,7 @@ The **Fly-In** project is a simulation system designed to evaluate and optimize 
 
 The objective is to safely coordinate a fleet of autonomous drones across a network of zones (hubs) and interconnecting links (connections). The system must guide all drones from a designated **Start Hub** to an **End Hub** in the minimum number of simulation turns possible, while strictly adhering to real-time spatial constraints (such as zone capacities and maximum link occupancy).
 
-The requirements are:
+The main requirements are:
 - Drones may move simultaneously
 - Path conflicts and deadlocks are not allowed
 - The simulation needs to meet zone and connection capacity constraints

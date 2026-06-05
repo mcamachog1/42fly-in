@@ -45,12 +45,16 @@ class FlyIn:
 
     def _begin_simulation(self) -> None:
         # route is the path with min cost from start_hub to end_hub
-        route: tuple[int, list[str]] = min_cost(
-                self.network,
-                self.network.start_hub
-                )[self.network.end_hub]
-        drones: list[Drone] = []
+        try:
+            route: tuple[int, list[str]] = min_cost(
+                    self.network,
+                    self.network.start_hub
+                    )[self.network.end_hub]
+        except KeyError:
+            print("ERROR - Map Error: The path to the end hub is blocked or missing.", file=stderr)
+            exit(1)
 
+        drones: list[Drone] = []
         for i in range(1, self.network.nb_drones + 1):
             drone = Drone(
                 id=i,
@@ -176,19 +180,19 @@ if __name__ == "__main__":
 
     maps: list[str] = [
         'data/maps/easy/01_linear_path.txt',
-        'data/maps/easy/02_simple_fork.txt',
-        'data/maps/easy/03_basic_capacity.txt',
-        'data/maps/medium/01_dead_end_trap.txt',
-        'data/maps/medium/02_circular_loop.txt',
-        'data/maps/medium/03_priority_puzzle.txt',
-        'data/maps/hard/01_maze_nightmare.txt',
-        'data/maps/hard/02_capacity_hell.txt',
-        'data/maps/hard/03_ultimate_challenge.txt',
-        'data/maps/challenger/01_the_impossible_dream.txt',
-        'data/maps/challenger/02_multiple_paths.txt',
+        # 'data/maps/easy/02_simple_fork.txt',
+        # 'data/maps/easy/03_basic_capacity.txt',
+        # 'data/maps/medium/01_dead_end_trap.txt',
+        # 'data/maps/medium/02_circular_loop.txt',
+        # 'data/maps/medium/03_priority_puzzle.txt',
+        # 'data/maps/hard/01_maze_nightmare.txt',
+        # 'data/maps/hard/02_capacity_hell.txt',
+        # 'data/maps/hard/03_ultimate_challenge.txt',
+        # 'data/maps/challenger/01_the_impossible_dream.txt',
+        # 'data/maps/challenger/02_multiple_paths.txt',
     ]
 
-    show_graphics = False
+    show_graphics = True
     for map in maps:
         flyin = FlyIn(map, show_graphics)
         flyin.run()

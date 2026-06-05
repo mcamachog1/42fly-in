@@ -1,10 +1,12 @@
-.PHONY: install run debug clean lint lint-strict
+.PHONY: install run debug clean lint lint-strict test
 
 VENV := venv
 PYTHON := $(VENV)/bin/python3
 PIP := $(VENV)/bin/pip
 FLAKE8 := $(VENV)/bin/flake8
 MYPY := $(VENV)/bin/mypy
+PYTEST := $(VENV)/bin/pytest
+TESTSDIR := /tests
 
 install:
 	python3 -m venv $(VENV)
@@ -30,3 +32,6 @@ lint-strict:
 	@clear
 	flake8 --exclude=.venv,venv,build,dist,__pycache__ .
 	$(PYTHON) -m mypy . --strict
+
+test:
+	$(PYTEST) tests/
