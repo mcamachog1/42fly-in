@@ -12,8 +12,8 @@ def read_map(filename: str) -> list[tuple[str, str]]:
         'end_hub',
         'connection',
         ]
-    # Each line is a tuple
-    file_lines: list[tuple[str, str]] = []
+    # Each line is a tuple (key, value(s), line_number)
+    file_lines: list[tuple[str, str, int]] = []
     try:
         with open(filename) as file:
             for line_num, line in enumerate(file, 1):
@@ -23,10 +23,10 @@ def read_map(filename: str) -> list[tuple[str, str]]:
                 key, value = line.split(":")
                 if key not in valid_keys:
                     raise ValueError(f"Invalid key '{key}'.")
-                file_lines.append((key, value))
+                file_lines.append((key, value, line_num))
             for key in valid_keys:
                 if key not in {line[0] for line in file_lines}:
-                    raise ValueError(f"'{key}' is missing.")
+                    raise ValueError(f"'{key}' is missing")
     except FileNotFoundError:
         print(f"READING FILE ERROR: Archive not found {filename}", file=sys.stderr)
         sys.exit()
@@ -35,15 +35,13 @@ def read_map(filename: str) -> list[tuple[str, str]]:
         sys.exit()
     except ValueError as error:
         print(
-            f"READING FILE ERROR: {error} in '{filename}' "
-            f"at line {line_num}.",
+            f"READING FILE ERROR: {error} in '{filename}' Error in line {line_num} ",
             file=sys.stderr
         )
         sys.exit()
     except Exception as error:
         print(
-            f"READING FILE ERROR:  Unexpected error: {error} "
-            f"at line {line_num} "
+            f"READING FILE ERROR:  Unexpected error: {error} Error in line {line_num} "
             f"- Type: {type(error).__name__}", file=sys.stderr)
         sys.exit()
     return file_lines

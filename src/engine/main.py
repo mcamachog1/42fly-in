@@ -2,6 +2,7 @@
 # main.py
 
 from sys import stderr, maxsize
+from typing import Any
 from src.parser.parse_map import parse_map
 from src.parser.load_model import load_map
 from src.model.model import Map, Drone, Hub, ZoneType
@@ -19,29 +20,34 @@ class FlyIn:
             self.plot = Visualizer(self.network, map_file)
         self.turn: int = 0
         self.end_hub: Hub = self.network.lookup_hubs[self.network.end_hub]
+        self.statistics: list[dict[Any, Any]] = []
 
     def _free_connection(self, drone: Drone) -> None:
         conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
         connect = self.network.lookup_connections[conn_name]
         connect.occupancy -= 1
 
-    def _move_drone(self, drone: Drone) -> None:
-        if drone.move and drone.travel_duration == 1:
-            drone.preview_zone = drone.current_zone
-            drone.current_zone = drone.next_zone
-            drone.path = drone.path[1:]
-            drone.accum_cost += drone.current_zone.cost
-            drone.move = False
-            drone.connection = None
-            self._free_connection(drone)
+    def _move_drone(self, drone: Drone) -> int:
+        if drone.move:
+            if drone.travel_duration == 1:
+                drone.preview_zone = drone.current_zone
+                drone.current_zone = drone.next_zone
+                drone.path = drone.path[1:]
+                drone.accum_cost += drone.current_zone.cost
+                drone.move = False
+                drone.connection = None
+                self._free_connection(drone)
 
-        # wait if drone will be moving to a restricted zone
-        elif drone.move and drone.travel_duration > 1:
-            drone.travel_duration -= 1
+            # wait if drone will be moving to a restricted zone
+            elif drone.travel_duration > 1:
+                drone.travel_duration -= 1
+            return 1
+        # drone without move add 1 for wait
         else:
             if drone.current_zone.name != self.end_hub.name:
                 drone.cost += 1
                 drone.accum_cost += 1
+            return 0
 
     def _begin_simulation(self) -> None:
         # route is the path with min cost from start_hub to end_hub
@@ -154,32 +160,47 @@ class FlyIn:
                     drone.cost = drone.accum_cost + new_cost
         self._book_all_drones()
 
-    def statistics(self) -> dict[str, int]:
+    def calc_statistics(self) -> None:
+        # Number of movements per drone
         drone_cost: dict[str, int] = {
             f"D{d.id}": d.cost for d in self.network.drones
         }
-        return drone_cost
+        self.statistics.append(drone_cost)
+
+        # Total path cost
+        total_path_cost: int = sum(drone_cost.values())
+        # Average turns per drone
+        avg_turns: float = total_path_cost / self.network.nb_drones
+        self.statistics.append({
+            'total_path_cost': total_path_cost,
+            'avg_turns_per_drone': avg_turns
+        })
+
 
     def run(self) -> None:
+        drones_moved_per_turn: dict[int, int] = {}
         self._begin_simulation()
         while self.end_hub.occupancy < self.network.nb_drones:
+            count_drones: int = 0
             self.turn += 1
             self._book_all_drones()
             self._improve_simulation()
             for drone in self.network.drones:
-                self._move_drone(drone)
+                count_drones += self._move_drone(drone)
+            drones_moved_per_turn[self.turn] = count_drones
             print_map(self.network, self.turn)
             if self.graph:
                 self.plot.draw_simulation()
-
+        self.statistics.append(drones_moved_per_turn)
         if self.graph:
             self.plot.close()
+
 
 
 if __name__ == "__main__":
 
     maps: list[str] = [
-        'data/maps/easy/01_linear_path.txt',
+        #'data/maps/easy/01_linear_path.txt',
         # 'data/maps/easy/02_simple_fork.txt',
         # 'data/maps/easy/03_basic_capacity.txt',
         # 'data/maps/medium/01_dead_end_trap.txt',
@@ -187,18 +208,30 @@ if __name__ == "__main__":
         # 'data/maps/medium/03_priority_puzzle.txt',
         # 'data/maps/hard/01_maze_nightmare.txt',
         # 'data/maps/hard/02_capacity_hell.txt',
-        # 'data/maps/hard/03_ultimate_challenge.txt',
-        # 'data/maps/challenger/01_the_impossible_dream.txt',
-        # 'data/maps/challenger/02_multiple_paths.txt',
+        #'data/maps/hard/03_ultimate_challenge.txt',
+        'data/maps/challenger/01_the_impossible_dream.txt',
+        #'data/maps/challenger/02_multiple_paths.txt',
     ]
 
-    show_graphics = True
+    test = [
+        # 'tests/test_data/01_dron_error.txt',
+        # 'tests/test_data/02_hub_error.txt',
+        # 'tests/test_data/03_wrong_connection.txt',
+        # 'tests/test_data/04_config_key_error.txt',
+        #  'tests/test_data/05_duplicate_start_hub.txt',
+        # 'tests/test_data/06_duplicate_end_hub.txt',
+        # 'tests/test_data/07_config_separator_error.txt',
+        'tests/test_data/08_duplicate_coords.txt',
+    ]
+
+    show_graphics = False
     for map in maps:
         flyin = FlyIn(map, show_graphics)
         flyin.run()
         print(f"file name: {map}")
         print("=== Statistics ===")
-        print(flyin.statistics())
+        flyin.calc_statistics()
+        print(flyin.statistics)
         option: int = int(input('Continue(1) - Quit(0): '))
         if option == 0:
             exit(0)

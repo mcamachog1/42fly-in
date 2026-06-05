@@ -3,7 +3,7 @@ nb_drones: 2
 
 start_hub: start 0 0 
 hub: waypoint1 1 0 
-hub: waypoint2 1 -1 
+hub: waypoint2 1 -a
 end_hub: goal 3 0 
 
 connection: start-waypoint1 [max_link_capacity=3]
