@@ -56,6 +56,7 @@ def get_metadata(string: str, prefix: str, line_n: int) -> dict[str, str]:
                 raise MapParsingError(f"Error in line {line_n} Invalid color for metadata '{string}'")
             value = 'white'
         result[key] = value
+    result['file_line'] = str(line_n)
     return result
 
 
@@ -107,6 +108,7 @@ def get_zones(zones: list[tuple[str, str, int]]) -> list[dict[str, Any]]:
             'zone': parsed_metadata.get('zone', 'normal'),
             'color': parsed_metadata.get('color', 'white'),
             'max_drones': parsed_metadata.get('max_drones', 1),
+            'file_line' : parsed_metadata.get('file_line', None),
         })
     return results
 
@@ -144,6 +146,7 @@ def get_connections(
             'prefix': connection,
             'name': name,
             'max_link_capacity': parsed_metadata.get('max_link_capacity', 1),
+            'file_line': line_n
         })
     return results
 

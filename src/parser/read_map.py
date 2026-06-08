@@ -4,7 +4,7 @@
 import sys
 
 
-def read_map(filename: str) -> list[tuple[str, str]]:
+def read_map(filename: str) -> list[tuple[str, str, int]]:
     valid_keys: list[str] = [
         'nb_drones',
         'start_hub',

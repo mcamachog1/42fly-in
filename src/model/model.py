@@ -2,7 +2,7 @@
 
 from sys import maxsize
 from enum import Enum
-from typing import ClassVar
+from typing import ClassVar, Optional
 from typing_extensions import Self
 
 try:
@@ -96,6 +96,7 @@ class Hub(BaseModel):
     max_drones: int = Field(ge=1, default=1)
     occupancy: int = 0
     cost: int = 1
+    file_line: Optional[int]
 
 
 class Connection(BaseModel):
@@ -103,6 +104,7 @@ class Connection(BaseModel):
     name: str = Field(min_length=1, max_length=50)
     max_link_capacity: int = Field(ge=1, default=1)
     occupancy: int = 0
+    file_line: Optional[int]    
 
 
 class Drone(BaseModel):

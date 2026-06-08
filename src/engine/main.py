@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # main.py
 
+import argparse
 from sys import stderr, maxsize
 from typing import Any
 from src.parser.parse_map import parse_map
@@ -21,6 +22,7 @@ class FlyIn:
         self.turn: int = 0
         self.end_hub: Hub = self.network.lookup_hubs[self.network.end_hub]
         self.statistics: list[dict[Any, Any]] = []
+
 
     def _free_connection(self, drone: Drone) -> None:
         conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
@@ -199,8 +201,22 @@ class FlyIn:
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(
+        description="Fly-In: Multi-Agent Pathfinding"
+    )
+
+    parser.add_argument(
+        '--gui-active',
+        action='store_true',
+        help="Show graphic visualization"
+    )
+
+
+    args = parser.parse_args()
+    show_graphics = args.gui_active
+
     maps: list[str] = [
-        #'data/maps/easy/01_linear_path.txt',
+        'data/maps/easy/01_linear_path.txt',
         # 'data/maps/easy/02_simple_fork.txt',
         # 'data/maps/easy/03_basic_capacity.txt',
         # 'data/maps/medium/01_dead_end_trap.txt',
@@ -208,24 +224,23 @@ if __name__ == "__main__":
         # 'data/maps/medium/03_priority_puzzle.txt',
         # 'data/maps/hard/01_maze_nightmare.txt',
         # 'data/maps/hard/02_capacity_hell.txt',
-        #'data/maps/hard/03_ultimate_challenge.txt',
-        'data/maps/challenger/01_the_impossible_dream.txt',
-        #'data/maps/challenger/02_multiple_paths.txt',
+        # 'data/maps/hard/03_ultimate_challenge.txt',
+        # 'data/maps/challenger/01_the_impossible_dream.txt',
+        # 'data/maps/challenger/02_multiple_paths.txt',
     ]
 
     test = [
         # 'tests/test_data/01_dron_error.txt',
         # 'tests/test_data/02_hub_error.txt',
-        # 'tests/test_data/03_wrong_connection.txt',
+         'tests/test_data/03_wrong_connection.txt',
         # 'tests/test_data/04_config_key_error.txt',
         #  'tests/test_data/05_duplicate_start_hub.txt',
         # 'tests/test_data/06_duplicate_end_hub.txt',
         # 'tests/test_data/07_config_separator_error.txt',
-        'tests/test_data/08_duplicate_coords.txt',
+        # 'tests/test_data/08_duplicate_coords.txt',
     ]
 
-    show_graphics = False
-    for map in maps:
+    for map in test:
         flyin = FlyIn(map, show_graphics)
         flyin.run()
         print(f"file name: {map}")

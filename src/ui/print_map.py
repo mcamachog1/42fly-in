@@ -4,7 +4,7 @@ from src.model.model import Color, Map
 
 
 def print_map(network: Map, turn: int) -> None:
-    print(f"TURNO: {turn} | ", end="")
+    print(f"TURN: {turn}    |   ", end="")
     for drone in network.drones:
         if drone.connection is not None:
             print(
@@ -19,3 +19,4 @@ def print_map(network: Map, turn: int) -> None:
                 f"{Color.RESET.get_color()}", end=" "
             )
     print()
+

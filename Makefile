@@ -7,6 +7,8 @@ FLAKE8 := $(VENV)/bin/flake8
 MYPY := $(VENV)/bin/mypy
 PYTEST := $(VENV)/bin/pytest
 TESTSDIR := /tests
+GUI_ACTIVE ?=
+
 
 install:
 	python3 -m venv $(VENV)
@@ -14,10 +16,10 @@ install:
 	$(PIP) install -r requirements.txt
 
 run:
-	$(PYTHON) -m src.engine.main
+	$(PYTHON) -m src.engine.main $(GUI_ACTIVE)
 
 debug:
-	$(PYTHON) -m pdb -m src.engine.main
+	$(PYTHON) -m pdb -m src.engine.main $(GUI_ACTIVE)
 
 clean:
 	@find . -name "__pycache__" -type d -exec rm -rf {} +
