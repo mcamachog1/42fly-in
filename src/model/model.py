@@ -136,10 +136,10 @@ class Map(BaseModel):
         used_names: set[str] = set()
         for hub in self.hubs:
             if hub.name in used_names:
-                raise ValueError(f"Duplicated zone name: '{hub.name}'")
+                raise ValueError(f"Duplicated zone name: '{hub.name}' Error in line {hub.file_line}")
             if '-' in hub.name:
                 raise ValueError(
-                    f"zone name: '{hub.name}' can not contain symbol '-'"
+                    f"zone name: '{hub.name}' can not contain symbol '-' Error in line {hub.file_line}"
                 )
             used_names.add(hub.name)
         return self
@@ -151,7 +151,7 @@ class Map(BaseModel):
             coordinates = (hub.x, hub.y)
             if coordinates in used_coordinates:
                 raise ValueError(
-                    f"Duplicated coordinates in zone: '{hub.name}'"
+                    f"Duplicated coordinates in zone: '{hub.name}' Error in line {hub.file_line}"
                 )
             used_coordinates.add(coordinates)
         return self
@@ -162,13 +162,13 @@ class Map(BaseModel):
         valid_names: set[str] = {hub.name for hub in self.hubs}
         for connection in self.connections:
             if connection.name in used_connections:
-                raise ValueError(f"Duplicated connection: '{connection.name}'")
+                raise ValueError(f"Duplicated connection: '{connection.name}' Error in line {connection.file_line}")
             zone1, zone2 = connection.name.split('-')
             rev_connection = f"{zone2}-{zone1}"
             if rev_connection in used_connections:
-                raise ValueError(f"Duplicated connection: '{connection.name}'")
+                raise ValueError(f"Duplicated connection: '{connection.name}' Error in line {connection.file_line}")
             if zone1 not in valid_names or zone2 not in valid_names:
-                raise ValueError(f"Invalid connection: '{connection.name}'")
+                raise ValueError(f"Invalid connection, one or more invalid zones: '{connection.name}' Error in line {connection.file_line}")
             used_connections.add(connection.name)
         return self
 

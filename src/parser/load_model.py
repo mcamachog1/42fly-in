@@ -38,24 +38,9 @@ def load_map(network: dict[str, Any]) -> Map:
         fly_map = Map(**map_input)
     except ValidationError as e:
         for error in e.errors():
-            # value_error_dict = error.get('ctx', None)
-            # if value_error_dict is not None:
-            #     value_error_msg = str(value_error_dict['error'])
-            #     if 'connection' in value_error_msg:
-            #         breakpoint()
-            #         conn_value = value_error_msg.split("'")
-            #         for conn in connection_objects:
-            #             if conn.name == conn_value[1]:
-            #                 f_line = conn.file_line
-            #                 print(
-            #                     "CONSTRAINT ERROR: "
-            #                     f"{error['msg'].removeprefix('Value error, ')} - Error in line: {f_line}"
-            #                 )
-            #                 exit(1)
-            #                 break
             print(
                 "CONSTRAINT ERROR: "
-                f"{error['msg'].removeprefix('Value error, ')} - Error in line: "
+                f"{error['msg'].removeprefix('Value error, ')}"
             )
         exit(1)
 

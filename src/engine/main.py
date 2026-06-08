@@ -231,11 +231,11 @@ if __name__ == "__main__":
 
     test = [
         # 'tests/test_data/01_dron_error.txt',
-        # 'tests/test_data/02_hub_error.txt',
-         'tests/test_data/03_wrong_connection.txt',
+        #'tests/test_data/02_hub_error.txt',
+        'tests/test_data/03_wrong_connection.txt',
         # 'tests/test_data/04_config_key_error.txt',
-        #  'tests/test_data/05_duplicate_start_hub.txt',
-        # 'tests/test_data/06_duplicate_end_hub.txt',
+        # 'tests/test_data/05_duplicate_start_hub.txt',
+        #  'tests/test_data/06_duplicate_end_hub.txt',
         # 'tests/test_data/07_config_separator_error.txt',
         # 'tests/test_data/08_duplicate_coords.txt',
     ]
