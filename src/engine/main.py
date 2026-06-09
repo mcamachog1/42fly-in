@@ -180,7 +180,7 @@ class FlyIn:
         })
 
     def run(self) -> None:
-        drones_moved_per_turn: dict[int, int] = {}
+        drones_moved_per_turn: dict[str, int] = {}
         self._begin_simulation()
         while self.end_hub.occupancy < self.network.nb_drones:
             count_drones: int = 0
@@ -189,7 +189,7 @@ class FlyIn:
             self._improve_simulation()
             for drone in self.network.drones:
                 count_drones += self._move_drone(drone)
-            drones_moved_per_turn[self.turn] = count_drones
+            drones_moved_per_turn[f"TURN {self.turn}"] = count_drones
             print_map(self.network, self.turn)
             if self.graph:
                 self.plot.draw_simulation()
@@ -216,27 +216,27 @@ def main() -> None:
     maps: list[str] = [
         'data/maps/easy/01_linear_path.txt',
         'data/maps/easy/02_simple_fork.txt',
-        # 'data/maps/easy/03_basic_capacity.txt',
-        # 'data/maps/medium/01_dead_end_trap.txt',
-        # 'data/maps/medium/02_circular_loop.txt',
-        # 'data/maps/medium/03_priority_puzzle.txt',
-        # 'data/maps/hard/01_maze_nightmare.txt',
-        # 'data/maps/hard/02_capacity_hell.txt',
-        # 'data/maps/hard/03_ultimate_challenge.txt',
-        # 'data/maps/challenger/01_the_impossible_dream.txt',
-        # 'data/maps/challenger/02_multiple_paths.txt',
+        'data/maps/easy/03_basic_capacity.txt',
+        'data/maps/medium/01_dead_end_trap.txt',
+        'data/maps/medium/02_circular_loop.txt',
+        'data/maps/medium/03_priority_puzzle.txt',
+        'data/maps/hard/01_maze_nightmare.txt',
+        'data/maps/hard/02_capacity_hell.txt',
+        'data/maps/hard/03_ultimate_challenge.txt',
+        'data/maps/challenger/01_the_impossible_dream.txt',
+        'data/maps/challenger/02_multiple_paths.txt',
     ]
 
-    test = [
-        # 'tests/test_data/01_dron_error.txt',
-        # 'tests/test_data/02_hub_error.txt',
-        'tests/test_data/03_wrong_connection.txt',
-        # 'tests/test_data/04_config_key_error.txt',
-        # 'tests/test_data/05_duplicate_start_hub.txt',
-        #  'tests/test_data/06_duplicate_end_hub.txt',
-        # 'tests/test_data/07_config_separator_error.txt',
-        # 'tests/test_data/08_duplicate_coords.txt',
-    ]
+    # test = [
+    #     # 'tests/test_data/01_dron_error.txt',
+    #     # 'tests/test_data/02_hub_error.txt',
+    #     # 'tests/test_data/03_wrong_connection.txt',
+    #     # 'tests/test_data/04_config_key_error.txt',
+    #     # 'tests/test_data/05_duplicate_start_hub.txt',
+    #     #  'tests/test_data/06_duplicate_end_hub.txt',
+    #     # 'tests/test_data/07_config_separator_error.txt',
+    #     # 'tests/test_data/08_duplicate_coords.txt',
+    # ]
 
     for map in maps:
         flyin = FlyIn(map, show_graphics)
@@ -244,7 +244,13 @@ def main() -> None:
         print(f"file name: {map}")
         print("=== Statistics ===")
         flyin.calc_statistics()
-        print(flyin.statistics)
+        for index, s in enumerate(flyin.statistics):
+            if index == 0:
+                print(f"=== Total movements per turn ===\n{s}")
+            if index == 1:
+                print(f"=== Total movements per drone ===\n{s}")
+            if index == 2:
+                print(f"=== Total path cost & Avg turns per drone ===\n{s}")
         option: int = int(input('Continue(1) - Quit(0): '))
         if option == 0:
             exit(0)
@@ -252,4 +258,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
