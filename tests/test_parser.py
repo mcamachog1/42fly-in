@@ -9,7 +9,7 @@ MAP_1 = 'data/maps/easy/01_linear_path.txt'
 
 def main() -> None:
     file_name: str = MAP_1
-    lines: list[tuple[str, str]] = read_map(file_name)
+    lines: list[tuple[str, str, int]] = read_map(file_name)
     for line in lines:
         print(line)
 

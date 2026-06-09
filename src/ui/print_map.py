@@ -19,4 +19,3 @@ def print_map(network: Map, turn: int) -> None:
                 f"{Color.RESET.get_color()}", end=" "
             )
     print()
-

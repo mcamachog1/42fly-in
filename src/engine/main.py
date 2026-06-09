@@ -23,7 +23,6 @@ class FlyIn:
         self.end_hub: Hub = self.network.lookup_hubs[self.network.end_hub]
         self.statistics: list[dict[Any, Any]] = []
 
-
     def _free_connection(self, drone: Drone) -> None:
         conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
         connect = self.network.lookup_connections[conn_name]
@@ -59,7 +58,9 @@ class FlyIn:
                     self.network.start_hub
                     )[self.network.end_hub]
         except KeyError:
-            print("ERROR - Map Error: The path to the end hub is blocked or missing.", file=stderr)
+            print(
+                "ERROR - Map Error: The path to the end "
+                "hub is blocked or missing.", file=stderr)
             exit(1)
 
         drones: list[Drone] = []
@@ -178,7 +179,6 @@ class FlyIn:
             'avg_turns_per_drone': avg_turns
         })
 
-
     def run(self) -> None:
         drones_moved_per_turn: dict[int, int] = {}
         self._begin_simulation()
@@ -198,7 +198,6 @@ class FlyIn:
             self.plot.close()
 
 
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
@@ -210,7 +209,6 @@ if __name__ == "__main__":
         action='store_true',
         help="Show graphic visualization"
     )
-
 
     args = parser.parse_args()
     show_graphics = args.gui_active
@@ -231,7 +229,7 @@ if __name__ == "__main__":
 
     test = [
         # 'tests/test_data/01_dron_error.txt',
-        #'tests/test_data/02_hub_error.txt',
+        # 'tests/test_data/02_hub_error.txt',
         'tests/test_data/03_wrong_connection.txt',
         # 'tests/test_data/04_config_key_error.txt',
         # 'tests/test_data/05_duplicate_start_hub.txt',
@@ -240,7 +238,7 @@ if __name__ == "__main__":
         # 'tests/test_data/08_duplicate_coords.txt',
     ]
 
-    for map in test:
+    for map in maps:
         flyin = FlyIn(map, show_graphics)
         flyin.run()
         print(f"file name: {map}")

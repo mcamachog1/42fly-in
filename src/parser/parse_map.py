@@ -17,9 +17,13 @@ def get_numbers_of_drones(lines: list[tuple[str, str, int]]) -> int:
         try:
             nb_drones: int = int(value)
         except ValueError as e:
-            raise MapParsingError(f"Error in line: {line_n} Invalid nb_drones value: {value}") from e
+            raise MapParsingError(
+                f"Error in line: {line_n} Invalid nb_drones "
+                f"value: {value}") from e
         if nb_drones <= 0:
-            raise MapParsingError(f"Error in line: {line_n} nb_drones must be greater than 0")
+            raise MapParsingError(
+                f"Error in line: {line_n} nb_drones must "
+                f"be greater than 0")
         return nb_drones
     else:
         raise MapParsingError(
@@ -35,25 +39,31 @@ def get_metadata(string: str, prefix: str, line_n: int) -> dict[str, str]:
         return result
     pattern = r"\[([a-z_0-9]+=[a-z_0-9]+\s*)*\]"
     if not re.search(pattern, string):
-        raise MapParsingError(f"Error in line {line_n} Invalid format for metadata '{string}'")
+        raise MapParsingError(
+            f"Error in line {line_n} Invalid format "
+            f"for metadata '{string}'")
     optionals: list[str] = string.strip("[]").split()
     pattern_color = r"^[a-z]{3,8}$"
     for values in optionals:
         key, value = values.split("=")
         if prefix.lower() == 'hub' and key not in Hub.META_DATA_KEYS:
             raise MapParsingError(
-                f"Error in line {line_n} Invalid key '{key}' for hub metadata '{string}'"
+                f"Error in line {line_n} Invalid key "
+                f"'{key}' for hub metadata '{string}'"
             )
         if (
             prefix.lower() == 'connection' and
             key not in Connection.META_DATA_KEYS
         ):
             raise MapParsingError(
-                f"Error in line {line_n} Invalid key '{key}' for connection metadata '{string}'"
+                f"Error in line {line_n} Invalid key "
+                f"'{key}' for connection metadata '{string}'"
             )
         if key == 'color' and value not in valid_colors:
             if not re.search(pattern_color, value):
-                raise MapParsingError(f"Error in line {line_n} Invalid color for metadata '{string}'")
+                raise MapParsingError(
+                    f"Error in line {line_n} Invalid color "
+                    f"for metadata '{string}'")
             value = 'white'
         result[key] = value
     return result
@@ -62,13 +72,21 @@ def get_metadata(string: str, prefix: str, line_n: int) -> dict[str, str]:
 def get_zones(zones: list[tuple[str, str, int]]) -> list[dict[str, Any]]:
 
     # Validate unique start_hub
-    start_hubs: list[str] = [str(line) for key, value, line in zones if key == 'start_hub']
+    start_hubs: list[str] = [
+        str(line)
+        for key, value, line in zones if key == 'start_hub']
     if len(start_hubs) > 1:
-        raise MapParsingError(f"Error in lines {', '.join(start_hubs)} There must be exactly one start_hub: zone")
+        raise MapParsingError(
+            f"Error in lines {', '.join(start_hubs)} "
+            "There must be exactly one start_hub: zone")
     # Validate unique end_hub
-    end_hubs: list[str] = [str(line) for key, value, line in zones if key == 'end_hub']
+    end_hubs: list[str] = [
+        str(line)
+        for key, value, line in zones if key == 'end_hub']
     if len(end_hubs) > 1:
-        raise MapParsingError(f"Error in lines {', '.join(end_hubs)} There must be exactly one end_hub: zone")
+        raise MapParsingError(
+            f"Error in lines {', '.join(end_hubs)} "
+            "There must be exactly one end_hub: zone")
 
     results: list[dict[str, Any]] = []
     for hub, values, line_n in zones:
@@ -77,7 +95,8 @@ def get_zones(zones: list[tuple[str, str, int]]) -> list[dict[str, Any]]:
         attributes = values.split(maxsplit=3)
         if len(attributes) > 4:
             raise MapParsingError(
-                    f"Error in line {line_n} To many arguments for zone: '{hub}': "
+                    f"Error in line {line_n} To many arguments "
+                    f"for zone: '{hub}': "
                     f"'{attributes}'"
             )
         if len(attributes) < 3:
@@ -107,7 +126,7 @@ def get_zones(zones: list[tuple[str, str, int]]) -> list[dict[str, Any]]:
             'zone': parsed_metadata.get('zone', 'normal'),
             'color': parsed_metadata.get('color', 'white'),
             'max_drones': parsed_metadata.get('max_drones', 1),
-            'file_line' : line_n
+            'file_line': line_n
         })
     return results
 
@@ -135,7 +154,8 @@ def get_connections(
         # Validate <zone1>-<zone2> format
         if name.count('-') != 1 or name.startswith('-') or name.endswith('-'):
             raise MapParsingError(
-                f"Error in line {line_n} Invalid name for connection: '{name}' "
+                f"Error in line {line_n} "
+                f"Invalid name for connection: '{name}' "
                 "expected: <zone1>-<zone2>"
             )
         parsed_metadata: dict[str, str] = get_metadata(

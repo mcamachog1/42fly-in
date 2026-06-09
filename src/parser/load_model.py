@@ -44,5 +44,4 @@ def load_map(network: dict[str, Any]) -> Map:
             )
         exit(1)
 
-
     return fly_map
