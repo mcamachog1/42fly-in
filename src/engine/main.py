@@ -198,7 +198,7 @@ class FlyIn:
             self.plot.close()
 
 
-if __name__ == "__main__":
+def main() -> None:
 
     parser = argparse.ArgumentParser(
         description="Fly-In: Multi-Agent Pathfinding"
@@ -215,7 +215,7 @@ if __name__ == "__main__":
 
     maps: list[str] = [
         'data/maps/easy/01_linear_path.txt',
-        # 'data/maps/easy/02_simple_fork.txt',
+        'data/maps/easy/02_simple_fork.txt',
         # 'data/maps/easy/03_basic_capacity.txt',
         # 'data/maps/medium/01_dead_end_trap.txt',
         # 'data/maps/medium/02_circular_loop.txt',
@@ -248,3 +248,8 @@ if __name__ == "__main__":
         option: int = int(input('Continue(1) - Quit(0): '))
         if option == 0:
             exit(0)
+
+
+if __name__ == "__main__":
+    main()
+
