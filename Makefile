@@ -8,6 +8,7 @@ MYPY := $(VENV)/bin/mypy
 PYTEST := $(VENV)/bin/pytest
 TESTSDIR := /tests
 GUI_ACTIVE ?=
+ALL_MAPS ?=
 
 
 install:
@@ -16,10 +17,10 @@ install:
 	$(PIP) install -r requirements.txt
 
 run:
-	$(PYTHON) -m src.engine.main $(GUI_ACTIVE)
+	$(PYTHON) -m src.engine.main $(GUI_ACTIVE) $(ALL_MAPS)
 
 debug:
-	$(PYTHON) -m pdb -m src.engine.main $(GUI_ACTIVE)
+	$(PYTHON) -m pdb -m src.engine.main $(GUI_ACTIVE) $(ALL_MAPS)
 
 clean:
 	@find . -name "__pycache__" -type d -exec rm -rf {} +

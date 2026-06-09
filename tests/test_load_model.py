@@ -2,9 +2,8 @@
 # test_parser.py
 
 
-from src.parser.parse_map import parse_map
-from src.parser.load_model import load_map
 from src.model.model import Map
+from src.parser.parse_map import MapParser
 
 
 # MAP02  = 'tests/test_data/02_hub_error.txt'
@@ -18,7 +17,8 @@ MAP02 = 'data/maps/easy/01_linear_path.txt'
 
 def test_02() -> None:
     filename: str = MAP02
-    my_map: Map = load_map(parse_map(filename))
+    map_parser = MapParser(filename)
+    my_map: Map = map_parser.load_map()
     print(my_map.hubs)
     # print(my_map.connections)
 

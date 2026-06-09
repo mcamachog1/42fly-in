@@ -2,16 +2,16 @@
 # test_parser.py
 
 
-from src.parser.read_map import read_map
+from src.parser.parse_map import MapParser
 
 MAP_1 = 'data/maps/easy/01_linear_path.txt'
 
 
 def main() -> None:
-    file_name: str = MAP_1
-    lines: list[tuple[str, str, int]] = read_map(file_name)
-    for line in lines:
-        print(line)
+    filename: str = MAP_1
+    map_parser = MapParser(filename)
+    my_map = map_parser.load_map()
+    print(my_map)
 
 
 if __name__ == "__main__":

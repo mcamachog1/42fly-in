@@ -98,6 +98,13 @@ Using a flag named **--gui-active** with the run rule, this flag name is given t
     ```
 and the GUI will be shown
 
+## How to test all maps of the subject
+- Execute
+   ```
+        make run ALL_MAPS=--all-maps
+    ```
+and a total of movements by map will be shown
+
 ## How to test a specific map
 
 By default the simulation executes the maps given in the subject, to execute a specific map, you have to alter src/engine/main.py adding the map path to the list variable: **maps** in the main function.

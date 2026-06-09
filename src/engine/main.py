@@ -4,24 +4,27 @@
 import argparse
 from sys import stderr, maxsize
 from typing import Any
-from src.parser.parse_map import parse_map
-from src.parser.load_model import load_map
+from src.parser.parse_map import MapParser
 from src.model.model import Map, Drone, Hub, ZoneType
-from src.ui.print_map import print_map
+from src.ui.print_map import TerminalInterface
 from src.ui.visualizer import Visualizer
-from src.engine.dijkstra import min_cost
+from src.engine.dijkstra import CostedMap
 
 
 class FlyIn:
-    def __init__(self, map_file: str, graph: bool = False) -> None:
-        self.map_file = map_file
+    def __init__(self, filename: str, graph: bool = False, all_maps: bool = False) -> None:
+        self.filename = filename
+        self.map_parser = MapParser(filename)
+        self.network: Map = self.map_parser.load_map()
         self.graph = graph
-        self.network: Map = load_map(parse_map(map_file))
+        self.all_maps = all_maps
+        self.terminal_ui = TerminalInterface(self.network)
         if self.graph:
-            self.plot = Visualizer(self.network, map_file)
+            self.plot = Visualizer(self.network, filename)
         self.turn: int = 0
         self.end_hub: Hub = self.network.lookup_hubs[self.network.end_hub]
         self.statistics: list[dict[Any, Any]] = []
+        self.costed_map = CostedMap(self.network)
 
     def _free_connection(self, drone: Drone) -> None:
         conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
@@ -53,8 +56,7 @@ class FlyIn:
     def _begin_simulation(self) -> None:
         # route is the path with min cost from start_hub to end_hub
         try:
-            route: tuple[int, list[str]] = min_cost(
-                    self.network,
+            route: tuple[int, list[str]] = self.costed_map.lower_cost_path(
                     self.network.start_hub
                     )[self.network.end_hub]
         except KeyError:
@@ -138,13 +140,11 @@ class FlyIn:
         for drone in drones_waiting:
             try:
                 if drone.current_zone.name == self.network.start_hub:
-                    new_cost, new_path = min_cost(
-                                    self.network,
+                    new_cost, new_path = self.costed_map.lower_cost_path(
                                     drone.current_zone.name,
                                     )[self.network.end_hub]
                 elif drone.next_zone.name != self.network.end_hub:
-                    new_cost, new_path = min_cost(
-                                    self.network,
+                    new_cost, new_path = self.costed_map.lower_cost_path(
                                     drone.current_zone.name,
                                     [self.network.start_hub, drone.path[1]]
                                     )[self.network.end_hub]
@@ -190,7 +190,8 @@ class FlyIn:
             for drone in self.network.drones:
                 count_drones += self._move_drone(drone)
             drones_moved_per_turn[f"TURN {self.turn}"] = count_drones
-            print_map(self.network, self.turn)
+            if not self.all_maps:
+                self.terminal_ui.print_turn(self.turn)
             if self.graph:
                 self.plot.draw_simulation()
         self.statistics.append(drones_moved_per_turn)
@@ -210,8 +211,15 @@ def main() -> None:
         help="Show graphic visualization"
     )
 
+    parser.add_argument(
+        '--all-maps',
+        action='store_true',
+        help="Summarize total turns for each map"
+    )
+
     args = parser.parse_args()
     show_graphics = args.gui_active
+    show_total = args.all_maps
 
     maps: list[str] = [
         'data/maps/easy/01_linear_path.txt',
@@ -224,10 +232,9 @@ def main() -> None:
         'data/maps/hard/02_capacity_hell.txt',
         'data/maps/hard/03_ultimate_challenge.txt',
         'data/maps/challenger/01_the_impossible_dream.txt',
-        'data/maps/challenger/02_multiple_paths.txt',
     ]
 
-    # test = [
+    # tests = [
     #     # 'tests/test_data/01_dron_error.txt',
     #     # 'tests/test_data/02_hub_error.txt',
     #     # 'tests/test_data/03_wrong_connection.txt',
@@ -236,24 +243,29 @@ def main() -> None:
     #     #  'tests/test_data/06_duplicate_end_hub.txt',
     #     # 'tests/test_data/07_config_separator_error.txt',
     #     # 'tests/test_data/08_duplicate_coords.txt',
+    #     # 'tests/test_data/09_multiple_paths.txt'git add
     # ]
 
     for map in maps:
-        flyin = FlyIn(map, show_graphics)
+        flyin = FlyIn(map, show_graphics, show_total)
         flyin.run()
-        print(f"file name: {map}")
-        print("=== Statistics ===")
         flyin.calc_statistics()
-        for index, s in enumerate(flyin.statistics):
-            if index == 0:
-                print(f"=== Total movements per turn ===\n{s}")
-            if index == 1:
-                print(f"=== Total movements per drone ===\n{s}")
-            if index == 2:
-                print(f"=== Total path cost & Avg turns per drone ===\n{s}")
-        option: int = int(input('Continue(1) - Quit(0): '))
-        if option == 0:
-            exit(0)
+        if not show_total:
+            print(f"file name: {map}")
+            print("=== Statistics ===")
+            for index, s in enumerate(flyin.statistics):
+                if index == 0:
+                    print(f"=== Total movements per turn ===\n{s}")
+                if index == 1:
+                    print(f"=== Total movements per drone ===\n{s}")
+                if index == 2:
+                    print(f"=== Total path cost & Avg turns per drone ===\n{s}")
+            option: int = int(input('Continue(1) - Quit(0): '))
+            if option == 0:
+                exit(0)
+        else:
+            print(f"\nMAP: {flyin.filename}\tTURNS:{flyin.turn}")                    
+
 
 
 if __name__ == "__main__":
