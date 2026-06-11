@@ -57,7 +57,7 @@ class CostedMap:
             start: str,
             exclude: Optional[list[str]] = None
     ) -> dict[str, tuple[int, list[str]]]:
-        """Calculates the lowest cost path mapping from a single start node.
+        """Calculates the lowest cost path from a single start node.
 
             Implements a modified variant of Dijkstra's algorithm using a
             heap queue. It evaluates path costs across hubs while adhering to a
@@ -79,7 +79,7 @@ class CostedMap:
         self.exclude = exclude
         info: tuple[int, str, list[str]] = (0, start, [start])
         lower_cost: dict[str, tuple[int, list[str]]] = {start: (0, [start])}
-        # list of tuples (cost, zone, path-until-this-zone)
+        # list of tuples (cost, objective-zone, path-until-objective-zone)
         heap: list[tuple[int, str, list[str]]] = []
         heappush(heap, info)
 

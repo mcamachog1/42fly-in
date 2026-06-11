@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# main.py
+# src/engine/main.py
 
 import argparse
 from sys import stderr, maxsize
@@ -16,20 +16,26 @@ class FlyIn:
     """Manages the simulation engine loop for Multi-Agent Pathfinding (MAPF).
 
     Coordinates text map decoding, routing recalculations using edge-weight
-    costs, real-time visual output updates, and execution metrics consolidation.
+    costs, real-time visual output updates, and execution metrics
+    consolidation.
 
     Attributes:
         filename (str): Path targeting the raw map specification file.
-        map_parser (MapParser): Utility decoding structural parameters from files.
-        network (Map): Root object instance holding hubs, links, and active drones.
-        graph (bool): Toggles whether Pygame GUI canvas frame rendering is active.
+        map_parser (MapParser): Utility decoding structural parameters
+            from files.
+        network (Map): Root object instance holding hubs, links, and
+            active drones.
+        graph (bool): Toggles whether Pygame GUI canvas frame rendering
+            is active.
         all_maps (bool): Toggles brief terminal outputs instead of step breaks.
         terminal_ui (TerminalInterface): Text renderer detailing turn steps.
         plot (Visualizer, optional): Graphical asset viewport painter instance.
         turn (int): Global simulation execution counter tracking clock ticks.
         end_hub (Hub): Destination node object matching targeting parameters.
-        statistics (list[dict[Any, Any]]): Tracked simulation profiling datasets.
-        costed_map (CostedMap): Evaluation proxy resolving minimum routing costs.
+        statistics (list[dict[Any, Any]]): Tracked simulation profiling
+            datasets.
+        costed_map (CostedMap): Evaluation proxy resolving minimum
+            routing costs.
     """
 
     def __init__(
@@ -39,7 +45,8 @@ class FlyIn:
         all_maps: bool = False
     ) -> None:
 
-        """Initializes runtime components and structural frameworks for FlyIn."""
+        """Initializes runtime components and structural frameworks
+        for FlyIn."""
         self.filename = filename
         self.map_parser = MapParser(filename)
         self.network: Map = self.map_parser.load_map()
@@ -50,18 +57,19 @@ class FlyIn:
         self.plot = None
         if self.gui_active:
             self.plot = Visualizer(self.network, filename)
-        
+
         self.turn = 0
         self.end_hub = self.network.lookup_hubs[self.network.end_hub]
-        self.statistics = []
+        self.statistics: list[dict[str, Any]] = []
         self.costed_map = CostedMap(self.network)
 
     def _free_connection(self, drone: Drone) -> None:
-        """Decrements the utilization metric across a traversed structural link.
+        """Decrements the utilization metric across a traversed
+        structural link.
 
         Args:
             drone (Drone): The specific agent vacating a connection track.
-        """        
+        """
         conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
         connect = self.network.lookup_connections[conn_name]
         connect.occupancy -= 1
@@ -130,7 +138,8 @@ class FlyIn:
         self.network.drones = drones
 
     def _book_connection(self, drone: Drone) -> bool:
-        """Validates if a target connection path contains vacant entry capacity.
+        """Validates if a target connection path contains vacant entry
+        capacity.
 
         Args:
             drone (Drone): Agent requesting connection access permissions.
@@ -171,7 +180,8 @@ class FlyIn:
             exit(1)
 
     def _book(self, drone: Drone) -> None:
-        """Registers spatial occupancy changes across networks for moving agents."""
+        """Registers spatial occupancy changes across networks for moving
+        agents."""
         try:
             conn_name = f"{drone.path[0]}-{drone.path[1]}"
             connect = self.network.lookup_connections[conn_name]
@@ -191,7 +201,8 @@ class FlyIn:
             exit(1)
 
     def _book_all_drones(self) -> None:
-        """Evaluates connection criteria and flags pathing options for agents."""
+        """Evaluates connection criteria and flags pathing options
+        for agents."""
         for drone in self.network.drones:
             if drone.move:
                 continue
@@ -236,7 +247,8 @@ class FlyIn:
         self._book_all_drones()
 
     def calc_statistics(self) -> None:
-        """Processes final operational datasets and tracks telemetry output maps."""
+        """Processes final operational datasets and tracks telemetry
+        output maps."""
         # Number of movements per drone
         drone_cost: dict[str, int] = {
             f"D{d.id}": d.cost for d in self.network.drones
@@ -266,15 +278,16 @@ class FlyIn:
             drones_moved_per_turn[f"TURN {self.turn}"] = count_drones
             if not self.all_maps:
                 self.terminal_ui.print_turn(self.turn)
-            if self.gui_active:
+            if self.gui_active and self.plot:
                 self.plot.draw_simulation()
         self.statistics.append(drones_moved_per_turn)
-        if self.gui_active:
+        if self.gui_active and self.plot:
             self.plot.close()
 
 
 def main() -> None:
-    """Parses environment flag instructions and handles dataset loop processes."""
+    """Parses environment flag instructions and handles dataset loop
+    processes."""
     parser = argparse.ArgumentParser(
         description="Fly-In: Multi-Agent Pathfinding"
     )

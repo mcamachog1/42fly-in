@@ -142,3 +142,43 @@ This project relies on a combination of Python's Standard Library and external p
 - **argparse:** A native CLI argument-parsing module used to capture terminal flags (such as `--gui-active`) to dynamically enable or disable the graphic visualizer.
 - **heapq:** A native module providing a binary heap algorithm. It serves as the heart of the core minimum-cost routing algorithm (Modified Dijkstra). It keeps path evaluation states sorted, ensuring that popping from the queue always yields the minimum-cost item (structured as tuples).
 - **re (Regular Expressions):** A native module used as an optimal solution for parsing flexible network configuration files. It provides a simple and feasible way to extract hub and connection metadata where the presence and quantity of attributes are variable.
+
+### Use of AI
+- For decide the folder structure of the project
+- For learn how to put video and images in this README file
+- For documentation of function and classes according PEP 257
+- For learn how to use python heapq module
+- For review and improve my code
+- For select ANSI color codes
+- For get example for use of pygame library and manage events
+
+# 4. Algorithm (minimum cost)
+
+The algorithm implements a modified variant of Dijkstra's algorithm using a Min-Heap (priority queue).
+
+    Exploration Data Structure (Heap): A list of tuples managed as a heap is used. The tuples are automatically maintained in ascending order based on their first element (the accumulated cost). The structure of each tuple is: (cost-to-get-objective-zone, objective-zone, path-until-objective-zone)
+
+    Optimal Routes Registry (Dictionary): A dictionary is used where the key is the destination_zone and the value is a tuple (minimum_cost, optimal_path). This dictionary acts as the official registry of the best routes found so far.
+
+    Initialization: The process begins by inserting the starting zone (start) into both the heap and the dictionary with a cost of 0 and a path containing only itself: [start].
+
+Exploration Loop (Repeated until the heap is empty):
+
+    The element with the lowest accumulated cost is extracted from the heap.
+
+    Obsolescence Filter: The cost of this extracted element is compared against the cost already registered in the dictionary for that same zone. If the heap cost is greater, it means a shorter path was already found previously, so this element is discarded (skipped).
+
+    Neighbor Exploration: If the element is valid, its adjacent zones (neighbors) are retrieved, and for each neighbor:
+
+        The new_cost is calculated (current accumulated cost + cost of entering the neighbor zone) and a new path array is generated.
+
+        If the neighbor has not been visited before, or if the new_cost is lower than the one stored in the dictionary, the dictionary is updated with the new optimal route, and the neighbor is pushed onto the heap to continue exploring from there.
+
+        Tie-breaking Rule (PRIORITY): If the new_cost is exactly equal to the cost already recorded, the algorithm applies a custom criterion: if the neighboring zone is of type PRIORITY, it overwrites the previous path to favor routes passing through priority zones, and pushes it back onto the heap."
+        
+
+
+
+
+
+

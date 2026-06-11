@@ -1,3 +1,5 @@
+# src/ui/print_map
+
 import pygame
 from src.model.model import Color, ZoneType, Map, Hub
 
@@ -5,32 +7,36 @@ from src.model.model import Color, ZoneType, Map, Hub
 class Visualizer:
     """Manages the graphical interface and simulation rendering using Pygame.
 
-        This class translates the abstract mathematical drone network
-        model (graph) into a visual display, handling coordinate scaling,
-        map translations, and drawing operations for hubs, connections,
-        and active drones.
+        This class translates the abstract mathematical drone network model
+        (graph) into a visual display, handling coordinate scaling, map
+        translations, and drawing operations for hubs, connections, and active
+        drones.
 
-    Attributes:
-        RADIUS_HUB (int): Pixel radius used to draw network hubs.
-        RADIUS_DRONE (int): Pixel radius used to draw active drones.
-        network (Network): The core drone network model containing
-            logical data.
-        clock (pygame.time.Clock): Pygame clock object to regulate frame rates.
-        width (int): Width of the display window in pixels.
-        height (int): Height of the display window in pixels.
-        scale (int): Multiplication factor to transform model units to pixels.
-        center_x (float): Dynamic X offset to position the map origin.
-        center_y (int): Dynamic Y offset to center the map vertically.
-        hub_coord (dict[str, tuple[float, float]]): Mapping of hub names to
-            their raw numerical model coordinates.
-        hubs (dict[str, Hub]): Mapping of hub names to their respective Hub
-            objects.
-        autoplay (bool): Flag indicating if the display is in autoplay
-            mode or manual step-by-step mode.
-        screen (pygame.Surface): The active Pygame window surface.
-        font (pygame.font.Font): Font configuration used for drawing overlay
-            text.
-    """
+        Attributes:
+            RADIUS_HUB (int): Pixel radius used to draw network hubs.
+            RADIUS_DRONE (int): Pixel radius used to draw active drones.
+            network (Map): The core drone network model containing logical
+                data.
+            clock (pygame.time.Clock): Pygame clock object to regulate frame
+                rates.
+            width (int): Width of the display window in pixels.
+            height (int): Height of the display window in pixels.
+            scale (int): Multiplication factor to transform model units to
+                pixels.
+            center_x (float): Dynamic X offset to position the map origin.
+            center_y (int): Dynamic Y offset to center the map vertically.
+            hub_coords (dict[str, tuple[int, int]]): Mapping of hub names to
+                their raw numerical model coordinates.
+            hubs (dict[str, Hub]): Mapping of hub names to their respective Hub
+                objects.
+            conns (dict[str, Connection]): Mapping of connection strings to
+                their respective Connection objects.
+            autoplay (bool): Flag indicating if the display is in autoplay
+                mode or manual step-by-step mode.
+            screen (pygame.Surface): The active Pygame window surface.
+            font (pygame.font.Font): Font configuration used for drawing
+                overlay text.
+        """
 
     RADIUS_HUB = 22
     RADIUS_DRONE = 8
@@ -46,13 +52,14 @@ class Visualizer:
         """Initializes the Visualizer window and properties.
 
         Args:
-            network (Network): The drone network model object to simulate.
+            network (Map): The drone network model object to simulate.
+            filename (str): Name of the map file used to set the window title.
             width (int, optional): Initial window width in pixels.
                 Defaults to 1200.
             height (int, optional): Initial window height in pixels.
                 Defaults to 600.
             scale (int, optional): Scale factor mapping 1 model unit to pixels.
-                Defaults to 60.
+                Defaults to 55.
         """
         # Graphic properties
         self.clock = pygame.time.Clock()
@@ -97,7 +104,7 @@ class Visualizer:
 
         Returns:
             tuple[int, int]: A tuple containing the corresponding (x, y)
-            pixel values on the Pygame window.
+                pixel values on the Pygame window.
         """
         scaled_x = model_x * self.scale
         scaled_y = model_y * self.scale
@@ -112,12 +119,12 @@ class Visualizer:
     ) -> None:
         """Draws a drone as a circle containing its identifying ID text.
 
-        Args:
-            center_pos (tuple[int, int]): Screen pixel position (x, y) where
-                the drone will be rendered.
-            text (str): The identification label (e.g., drone ID) to display
-                inside the circle.
-        """
+            Args:
+                center_pos (tuple[int, int]): Screen pixel position (x, y)
+                    where the drone will be rendered.
+                text (str): The identification label (e.g., drone ID) to
+                    display inside the circle.
+            """
         circle_color = Color.BLACK.value
         pygame.draw.circle(
             self.screen,
@@ -133,9 +140,9 @@ class Visualizer:
     def draw_connections(self) -> None:
         """Renders structural paths connecting hubs on the display surface.
 
-            Colors lines dynamically depending on whether either connecting hub
-            is classified under a restricted, priority, or blocked zone.
-            """
+        Colors lines dynamically depending on whether either connecting hub
+        is classified under a restricted, priority, or blocked zone.
+        """
         for conn in self.network.connections:
             line_color = 'black'
             z1, z2 = conn.name.split('-')
@@ -169,15 +176,17 @@ class Visualizer:
         center_pos: tuple[int, int],
         zone: Hub
     ) -> None:
-        """Draws a hub as a circle containing its identifying ID text.
+        """Overlays the identification name text onto a rendered node hub area.
+
+        Dynamically checks the contrast safety margins of background nodes,
+        switching text color to black if rendering over white or yellow hubs.
 
         Args:
             center_pos (tuple[int, int]): Screen pixel position (x, y) where
-                the hub will be rendered.
-            text (str): The identification label (e.g., hub name) to display
-                inside the circle.
+                the text rect will center.
+            zone (Hub): The data model instance representing the current
+                hub node.
         """
-
         transparent_surface = pygame.Surface(center_pos, pygame.SRCALPHA)
         circle_color = (0, 0, 0, 0)
         pygame.draw.circle(
@@ -211,6 +220,12 @@ class Visualizer:
             self.draw_hub_text(pos, hub)
 
     def draw_drones(self) -> None:
+        """Calculates drone offsets and plots active agents on the display map.
+
+        Applies dynamic delta displacement formulas based on node/connection
+        occupancy counts to separate overlapping drones when stacked at the
+        same structural coordinates.
+        """
         # delta is for move drones inside the same hub a little distance
         delta: dict[str, float] = {h.name: 0 for h in self.network.hubs}
         for c in self.network.connections:
@@ -245,9 +260,9 @@ class Visualizer:
     def event_action(self, event: pygame.event.Event, bg_color: str) -> None:
         """Handles core window events such as resizing and closing requests.
 
-            Args:
-                event (Event): The Pygame event object to evaluate.
-                bg_color (str): The background color name or RGB tuple to fill
+        Args:
+            event (pygame.event.Event): The Pygame event object to evaluate.
+            bg_color (str): The background color name or RGB tuple to fill
                 the screen.
         """
         # Close window event
@@ -272,14 +287,16 @@ class Visualizer:
             pygame.display.flip()
 
     def close(self) -> None:
+        """Uninitializes Pygame core frameworks and closes standard
+        visual windows."""
         pygame.quit()
 
     def draw_simulation(self) -> None:
         """Refreshes and paints the current frame of the live simulation.
 
-            Draws connections, updates hub availability colors, plots drone
-            midpoint transitions, and triggers a physical frame update to
-            the screen display.
+        Draws connections, updates hub availability colors, plots drone
+        midpoint transitions, and triggers a physical frame update to
+        the screen display.
         """
         bg_color = 'gray'
         self.screen.fill(bg_color)

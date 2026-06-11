@@ -1,4 +1,4 @@
-# model.py
+# src/model/model.py
 
 from sys import maxsize
 from enum import Enum
@@ -17,18 +17,37 @@ except ImportError:
 
 
 class HubPrefix(Enum):
+    """Enumeration defining the acceptable prefix classifiers for
+    structural hubs.
+
+    These tokens are used by text configuration parsers to distinguish
+    structural roles within maps.
+    """
     HUB = 'hub'
     START = 'start_hub'
     END = 'end_hub'
 
 
 class ZoneType(Enum):
+    """Enumeration identifying operational constraints and movement cost types
+    for hubs.
+
+    Determines graph-weight cost routing variables evaluated during automated
+    agent pathfinding operations.
+    """
     NORMAL = 'normal'
     BLOCKED = 'blocked'
     RESTRICTED = 'restricted'
     PRIORITY = 'priority'
 
     def get_cost(self) -> int:
+        """Determines the discrete pathfinding numerical step penalty for
+        the zone type.
+
+        Returns:
+            int: The movement cost weight value associated with this zone
+            classification.
+        """
         costs = {
             ZoneType.NORMAL: 1,
             ZoneType.RESTRICTED: 2,
@@ -39,6 +58,12 @@ class ZoneType(Enum):
 
 
 class Color(Enum):
+    """ANSI Escape sequence mapper matching graphical and text terminal
+    viewports.
+
+    Provides specific sequence maps for runtime log printouts or visual
+    styling.
+    """
     RED = 'red'
     GREEN = 'green'
     BLUE = 'blue'
@@ -86,6 +111,27 @@ class Color(Enum):
 
 
 class Hub(BaseModel):
+    """Pydantic model representing a node endpoint or waypoint intersection.
+
+    Holds spatial dimensions, validation configurations, dynamic tracking
+    counters, and reference trackers mapped back to the origin text document.
+
+    Fields:
+        prefix (HubPrefix): The operational status layout designation.
+        name (str): Identifier between 1 and 20 characters in length.
+        x (int): Horizontal spatial configuration coordinate.
+        y (int): Vertical spatial configuration coordinate.
+        zone (ZoneType): Behavior model profile. Defaults to ZoneType.NORMAL.
+        color (Color): UI display aesthetic tracking configuration. Defaults
+            to Color.WHITE.
+        max_drones (int): Concurrency agent capacity threshold.
+            Must be >= 1. Defaults to 1.
+        occupancy (int): Active tracking counter monitoring current agents.
+            Defaults to 0.
+        cost (int): Configured routing graph penalty weight. Defaults to 1.
+        file_line (int, optional): Source configuration document line
+            reference index.
+    """
     META_DATA_KEYS: ClassVar[set[str]] = {'zone', 'color', 'max_drones'}
     prefix: HubPrefix
     name: str = Field(min_length=1, max_length=20)
@@ -100,6 +146,18 @@ class Hub(BaseModel):
 
 
 class Connection(BaseModel):
+    """Pydantic model representing a bidirectional edge link between two hubs.
+
+    Fields:
+        name (str): Expected structural layout token formatted
+            as '<zone1>-<zone2>'. Length must be between 1 and 50 characters.
+        max_link_capacity (int): Concurrency payload limits for transit.
+            Must be >= 1. Defaults to 1.
+        occupancy (int): Dynamic simulation tracking registry counting
+            current transits. Defaults to 0.
+        file_line (int, optional): Source file line number for exception
+            tracing context.
+    """
     META_DATA_KEYS: ClassVar[set[str]] = {'max_link_capacity'}
     name: str = Field(min_length=1, max_length=50)
     max_link_capacity: int = Field(ge=1, default=1)
@@ -108,6 +166,31 @@ class Connection(BaseModel):
 
 
 class Drone(BaseModel):
+    """Pydantic model defining operational attributes of an individual
+    mobile agent.
+
+        Fields:
+            id (int): Positive unique key identifying the drone asset.
+                Must be >= 1.
+            current_zone (Hub): The current hub where the drone is located.
+            next_zone (Hub): Target destination step along the active
+                route sequence.
+            preview_zone (Hub): Previous layout step intersection location
+                marker.
+            connection (str, optional): Target connection edge ID name if
+                actively transiting. Defaults to None.
+            path (list[str]): Sequential sequence of future hub names to be
+                visited. Defaults to [].
+            cost (int): Estimated movement turn calculation metrics.
+                Defaults to 0.
+            accum_cost (int): Historical record tracking total turns consumed.
+                Defaults to 0.
+            move (bool): Status flag tracking if routing space is reserved
+                for a step. Defaults to False.
+            travel_duration (int): Chronological turn count delay steps
+                remaining to complete the current link navigation.
+                Defaults to 1.
+        """
     id: int = Field(ge=1)
     current_zone: Hub
     next_zone: Hub
@@ -121,6 +204,27 @@ class Drone(BaseModel):
 
 
 class Map(BaseModel):
+    """Root model holding the entire layout environment state data collection.
+
+    Orchestrates initial entity group allocations, cross-links lookups,
+    and registers Pydantic lifecycle data-integrity assertion validators.
+
+    Fields:
+        nb_drones (int): Complete agent population quantity limit parameters
+            (1 to 50).
+        start_hub (str): Core node entry name marking origin coordinates.
+        hubs (list[Hub]): Full dataset listing specifying active map node
+            elements.
+        end_hub (str): Target final destination layout node criteria string.
+        connections (list[Connection]): Structural pathway layout array.
+        drones (list[Drone]): Collection tracking processing active simulation
+            agents.
+        lookup_hubs (dict[str, Hub]): Optimization map linking keys to objects.
+        lookup_hub_coords (dict[str, tuple[int, int]]): Map tracking localized
+            node points.
+        lookup_connections (dict[str, Connection]): Bidirectional edge
+            cross-referencing maps.
+    """
     nb_drones: int = Field(ge=1, le=50)
     start_hub: str
     hubs: list[Hub]
@@ -133,6 +237,15 @@ class Map(BaseModel):
 
     @model_validator(mode='after')
     def validate_hub_names(self) -> Self:
+        """Enforces entity name uniqueness and bans illegal token formats.
+
+        Raises:
+            ValueError: If duplicate zone names exist or name strings contain
+                the reserved hyphen '-' character.
+
+        Returns:
+            Self: The validated Map instance.
+        """
         used_names: set[str] = set()
         for hub in self.hubs:
             if hub.name in used_names:
@@ -149,6 +262,15 @@ class Map(BaseModel):
 
     @model_validator(mode='after')
     def validate_coordinates(self) -> Self:
+        """Validates that no two hubs share identical spatial coordinate
+            configurations.
+
+        Raises:
+            ValueError: If multiple hubs share overlapping (x, y) coordinates.
+
+        Returns:
+            Self: The validated Map instance.
+        """
         used_coordinates: set[tuple[int, int]] = set()
         for hub in self.hubs:
             coordinates = (hub.x, hub.y)
@@ -162,6 +284,19 @@ class Map(BaseModel):
 
     @model_validator(mode='after')
     def validate_connection(self) -> Self:
+        """Validates structural correctness and uniqueness of edge connection
+        schemas.
+
+        Ensures that connections are not duplicated in either direction
+        and that the endpoint hubs exist.
+
+        Raises:
+            ValueError: If duplicates/inverse matches are found or if
+                an endpoint references an undefined hub.
+
+        Returns:
+            Self: The validated Map instance.
+        """
         used_connections: set[str] = set()
         valid_names: set[str] = {hub.name for hub in self.hubs}
         for connection in self.connections:
@@ -185,6 +320,12 @@ class Map(BaseModel):
 
     @model_validator(mode='after')
     def initialize_cost_zone(self) -> Self:
+        """Sets internal route-weight properties across elements using
+        ZoneType rules.
+
+        Returns:
+            Self: The updated Map instance.
+        """
         for zone in self.hubs:
             if zone.zone == ZoneType.NORMAL:
                 zone.cost = 1
@@ -198,12 +339,29 @@ class Map(BaseModel):
 
     @model_validator(mode='after')
     def initialize_lookups(self) -> Self:
+        """Orchestrates tracking setup steps to compile structural
+        mapping lookups.
+
+        Returns:
+            Self: The Map instance with fully populated lookup dictionaries.
+        """
         self.lookup_hubs = self._lookup_hubs()
         self.lookup_hub_coords = self._lookup_hub_coords()
         self.lookup_connections = self._lookup_connections()
         return self
 
     def _lookup_connections(self) -> dict[str, Connection]:
+        """Generates a lookup map containing commutative bidirectional
+        edge entries.
+
+        Maps both forward ('A-B') and reverse ('B-A') configurations
+        to the same underlying Connection reference to support simplified
+        graph routing logic.
+
+        Returns:
+            dict[str, Connection]: Dictionary mapping connection string
+                identifiers to their Connection objects.
+        """
         conn_objects: dict[str, Connection] = {
             c.name: c for c in self.connections
         }

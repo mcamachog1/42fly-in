@@ -1,4 +1,4 @@
-# parse_map.py
+# src/parser/parse_map.py
 
 import re
 import sys
@@ -8,17 +8,47 @@ from pydantic import ValidationError
 
 
 class MapParsingError(Exception):
-    """Errors related to parsing maps"""
+    """Custom exception raised for syntax or constraint violations during
+    map parsing."""
     pass
 
 
 class MapParser():
+    """Parses structural layout configuration files into fully
+    validated Map domains.
+
+    Handles continuous stream reading, syntactic isolation, attribute checking,
+    regex-based metadata parsing, and instance loading of unified
+    Pydantic maps.
+
+    Attributes:
+        filename (str): Path targeting the map specification source file.
+        raw_data (list[tuple[str, str, int]]): Isolated string fragments
+            extracted from the file containing keys, raw text parameters,
+            and line numbers.
+        valid_colors (set[str]): Collection of text string color
+            literals supported by the system.
+    """
     def __init__(self, filename: str) -> None:
+        """Initializes the MapParser and automatically reads the target
+        raw map data."""
         self.filename = filename
         self.raw_data: list[tuple[str, str, int]] = self._read_map()
         self.valid_colors = {c.value for c in Color}
 
     def _get_numbers_of_drones(self) -> int:
+        """Extracts and validates the initial 'nb_drones' parameter
+        from memory.
+
+        Raises:
+            MapParsingError: If 'nb_drones' is absent from the primary dataset
+                space, contains non-integer characters, or evaluates to
+                less than or equal to 0.
+
+        Returns:
+            int: Total headcount volume parameters of operational simulation
+                agents.
+        """
         key, value, line_n = self.raw_data[0]
         if key == 'nb_drones':
             try:
@@ -44,6 +74,28 @@ class MapParser():
             prefix: str,
             line_n: int
     ) -> dict[str, str]:
+        """Decodes localized configuration metadata string brackets
+        via regex matching.
+
+        Processes option entries declared inside brackets like
+        `[zone=priority color=red]`.
+
+        Args:
+            string (str): Raw target metadata parameter string.
+            prefix (str): Structural type identifier ('hub' or 'connection')
+                used to validate options.
+            line_n (int): Source reference line tracking index used for error
+                context.
+
+        Raises:
+            MapParsingError: If the syntax format violates standard rules,
+                an illegal key option parameter is passed, or color literal
+                parameters are corrupt.
+
+        Returns:
+            dict[str, str]: Dictionary mapping isolated key variables to
+            property values.
+        """
         result: dict[str, str] = {}
         if string == "":
             return result
@@ -82,7 +134,24 @@ class MapParser():
         self,
         zones: list[tuple[str, str, int]]
     ) -> list[dict[str, Any]]:
+        """Validates layout rules and processes property models for hub
+        map items.
 
+        Enforces uniqueness boundaries limiting the network layout to exactly
+        one start hub and one end hub node.
+
+        Args:
+            zones (list[tuple[str, str, int]]): Isolated raw hub data lines.
+
+        Raises:
+            MapParsingError: If multiple start or end hubs are detected,
+                argument counts are mismatching, or coordinates are
+                non-numeric.
+
+        Returns:
+            list[dict[str, Any]]: Raw dictionary collection containing hub
+                records ready for class instantiation.
+        """
         # Validate unique start_hub
         start_hubs: list[str] = [
             str(line)
@@ -148,6 +217,25 @@ class MapParser():
     def _get_connections(
             self,
             connections: list[tuple[str, str, int]]) -> list[dict[str, Any]]:
+        """Processes and validates layout schema structures for route edge
+        links.
+
+        Ensures connection names correctly fit the mandatory '<zone1>-<zone2>'
+        format.
+
+        Args:
+            connections (list[tuple[str, str, int]]): Isolated raw link
+                connection data lines.
+
+        Raises:
+            MapParsingError: If attribute parameter quantities are incorrect
+            or the naming style misses the single dash delimiter pattern
+            layout.
+
+        Returns:
+            list[dict[str, Any]]: Raw dictionary mappings outlining connection
+                variables.
+        """
         results: list[dict[str, Any]] = []
         for connection, values, line_n in connections:
             metadata: str = ""
@@ -164,7 +252,7 @@ class MapParser():
                     f"{connection}: {attributes}"
                 )
             if len(attributes) == 1:
-                name, = attributes
+                name = attributes[0]
             if len(attributes) == 2:
                 name, metadata = attributes
             # Validate <zone1>-<zone2> format
@@ -191,6 +279,19 @@ class MapParser():
         return results
 
     def _parse(self) -> dict[str, Any]:
+        """Orchestrates internal sub-parsing operations to aggregate
+        components.
+
+        Segregates components using line header keys into isolated category
+        maps.
+
+        Raises:
+            SystemExit: If an internal parsing routing error is captured.
+
+        Returns:
+            dict[str, Any]: Aggregated raw components describing the system
+            state.
+        """
 
         data: dict[str, Any] = {}
 
@@ -219,6 +320,17 @@ class MapParser():
             exit(1)
 
     def _read_map(self) -> list[tuple[str, str, int]]:
+        """Reads the file line-by-line, stripping comments and isolating map
+        tokens.
+
+        Raises:
+            SystemExit: If file access is denied, the path does not exist,
+                syntax is invalid, or mandatory layout block keys are missing.
+
+        Returns:
+            list[tuple[str, str, int]]: Collection of sanitized configuration
+            data.
+        """
         valid_keys: list[str] = [
             'nb_drones',
             'start_hub',
@@ -267,6 +379,18 @@ class MapParser():
         return file_lines
 
     def load_map(self) -> Map:
+        """Assembles data components into a fully validated Map object model.
+
+        Injects capacity rules (infinite limits for endpoints) and formats
+        initial inputs before performing the final Pydantic verification step.
+
+        Raises:
+            SystemExit: If model validation checks flag constraint failures.
+
+        Returns:
+            Map: A fully instantiated and validated ecosystem network Map
+            object.
+        """
         data = self._parse()
         # Format input for zone objects
         zones: list[dict[str, Any]] = data['zones']
