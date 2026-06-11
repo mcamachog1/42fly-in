@@ -12,26 +12,71 @@ from src.engine.dijkstra import CostedMap
 
 
 class FlyIn:
-    def __init__(self, filename: str, graph: bool = False, all_maps: bool = False) -> None:
+
+    """Manages the simulation engine loop for Multi-Agent Pathfinding (MAPF).
+
+    Coordinates text map decoding, routing recalculations using edge-weight
+    costs, real-time visual output updates, and execution metrics consolidation.
+
+    Attributes:
+        filename (str): Path targeting the raw map specification file.
+        map_parser (MapParser): Utility decoding structural parameters from files.
+        network (Map): Root object instance holding hubs, links, and active drones.
+        graph (bool): Toggles whether Pygame GUI canvas frame rendering is active.
+        all_maps (bool): Toggles brief terminal outputs instead of step breaks.
+        terminal_ui (TerminalInterface): Text renderer detailing turn steps.
+        plot (Visualizer, optional): Graphical asset viewport painter instance.
+        turn (int): Global simulation execution counter tracking clock ticks.
+        end_hub (Hub): Destination node object matching targeting parameters.
+        statistics (list[dict[Any, Any]]): Tracked simulation profiling datasets.
+        costed_map (CostedMap): Evaluation proxy resolving minimum routing costs.
+    """
+
+    def __init__(
+        self,
+        filename: str,
+        gui_active: bool = False,
+        all_maps: bool = False
+    ) -> None:
+
+        """Initializes runtime components and structural frameworks for FlyIn."""
         self.filename = filename
         self.map_parser = MapParser(filename)
         self.network: Map = self.map_parser.load_map()
-        self.graph = graph
+        self.gui_active = gui_active
         self.all_maps = all_maps
         self.terminal_ui = TerminalInterface(self.network)
-        if self.graph:
+
+        self.plot = None
+        if self.gui_active:
             self.plot = Visualizer(self.network, filename)
-        self.turn: int = 0
-        self.end_hub: Hub = self.network.lookup_hubs[self.network.end_hub]
-        self.statistics: list[dict[Any, Any]] = []
+        
+        self.turn = 0
+        self.end_hub = self.network.lookup_hubs[self.network.end_hub]
+        self.statistics = []
         self.costed_map = CostedMap(self.network)
 
     def _free_connection(self, drone: Drone) -> None:
+        """Decrements the utilization metric across a traversed structural link.
+
+        Args:
+            drone (Drone): The specific agent vacating a connection track.
+        """        
         conn_name = f"{drone.preview_zone.name}-{drone.current_zone.name}"
         connect = self.network.lookup_connections[conn_name]
         connect.occupancy -= 1
 
     def _move_drone(self, drone: Drone) -> int:
+        """Executes position translations or wait penalties for a single agent.
+
+        Args:
+            drone (Drone): Target simulation asset whose position is advanced.
+
+        Returns:
+            int: 1 if the agent transitioned structural hubs, 0 if it remained
+                stationary.
+        """
+
         if drone.move:
             if drone.travel_duration == 1:
                 drone.preview_zone = drone.current_zone
@@ -54,7 +99,13 @@ class FlyIn:
             return 0
 
     def _begin_simulation(self) -> None:
-        # route is the path with min cost from start_hub to end_hub
+        """Generates the primary minimum cost routes from start_hub
+        to end_hub and allocates drone objects.
+
+        Raises:
+            SystemExit: If the network destination node cannot be resolved.
+        """
+
         try:
             route: tuple[int, list[str]] = self.costed_map.lower_cost_path(
                     self.network.start_hub
@@ -79,6 +130,15 @@ class FlyIn:
         self.network.drones = drones
 
     def _book_connection(self, drone: Drone) -> bool:
+        """Validates if a target connection path contains vacant entry capacity.
+
+        Args:
+            drone (Drone): Agent requesting connection access permissions.
+
+        Returns:
+            bool: True if connection capacity is available, False otherwise.
+        """
+
         try:
             conn_name = f"{drone.path[0]}-{drone.path[1]}"
             connect = self.network.lookup_connections[conn_name]
@@ -91,6 +151,15 @@ class FlyIn:
             exit(1)
 
     def _book_hub(self, drone: Drone) -> bool:
+        """Validates if a target hub zone contains vacant docking slots.
+
+        Args:
+            drone (Drone): Agent evaluating subsequent segment travel criteria.
+
+        Returns:
+            bool: True if destination node slots are open, False otherwise.
+        """
+
         try:
             next_zone: Hub = self.network.lookup_hubs[drone.path[1]]
             if next_zone.occupancy >= next_zone.max_drones:
@@ -102,6 +171,7 @@ class FlyIn:
             exit(1)
 
     def _book(self, drone: Drone) -> None:
+        """Registers spatial occupancy changes across networks for moving agents."""
         try:
             conn_name = f"{drone.path[0]}-{drone.path[1]}"
             connect = self.network.lookup_connections[conn_name]
@@ -121,6 +191,7 @@ class FlyIn:
             exit(1)
 
     def _book_all_drones(self) -> None:
+        """Evaluates connection criteria and flags pathing options for agents."""
         for drone in self.network.drones:
             if drone.move:
                 continue
@@ -134,6 +205,7 @@ class FlyIn:
                 drone.move = False
 
     def _improve_simulation(self) -> None:
+        """Recalculates routing matrices dynamically for gridlocked agents."""
         drones_waiting = [d for d in self.network.drones if not d.move]
         new_cost = maxsize
         # Update path
@@ -164,6 +236,7 @@ class FlyIn:
         self._book_all_drones()
 
     def calc_statistics(self) -> None:
+        """Processes final operational datasets and tracks telemetry output maps."""
         # Number of movements per drone
         drone_cost: dict[str, int] = {
             f"D{d.id}": d.cost for d in self.network.drones
@@ -180,6 +253,7 @@ class FlyIn:
         })
 
     def run(self) -> None:
+        """Orchestrates runtime operations across map simulation sequences."""
         drones_moved_per_turn: dict[str, int] = {}
         self._begin_simulation()
         while self.end_hub.occupancy < self.network.nb_drones:
@@ -192,15 +266,15 @@ class FlyIn:
             drones_moved_per_turn[f"TURN {self.turn}"] = count_drones
             if not self.all_maps:
                 self.terminal_ui.print_turn(self.turn)
-            if self.graph:
+            if self.gui_active:
                 self.plot.draw_simulation()
         self.statistics.append(drones_moved_per_turn)
-        if self.graph:
+        if self.gui_active:
             self.plot.close()
 
 
 def main() -> None:
-
+    """Parses environment flag instructions and handles dataset loop processes."""
     parser = argparse.ArgumentParser(
         description="Fly-In: Multi-Agent Pathfinding"
     )
@@ -250,22 +324,21 @@ def main() -> None:
         flyin = FlyIn(map, show_graphics, show_total)
         flyin.run()
         flyin.calc_statistics()
+        print("=== Statistics ===")
+        print(f"file: {map}")
+        print(f"=== Total turns ===\n{flyin.turn}")
         if not show_total:
-            print(f"file name: {map}")
-            print("=== Statistics ===")
             for index, s in enumerate(flyin.statistics):
                 if index == 0:
                     print(f"=== Total movements per turn ===\n{s}")
                 if index == 1:
                     print(f"=== Total movements per drone ===\n{s}")
                 if index == 2:
-                    print(f"=== Total path cost & Avg turns per drone ===\n{s}")
+                    print(
+                        f"=== Total path cost & Avg turns per drone ===\n{s}")
             option: int = int(input('Continue(1) - Quit(0): '))
             if option == 0:
                 exit(0)
-        else:
-            print(f"\nMAP: {flyin.filename}\tTURNS:{flyin.turn}")                    
-
 
 
 if __name__ == "__main__":
