@@ -98,6 +98,9 @@ By using a flag named **--gui-active** with the run rule, this flag value is pas
     ```
 and the GUI will be shown
 
+- Press **`SPACE`** to advance the simulation step-by-step (manual mode)
+- Press **`ENTER`** to switch the simulation to automatic mode (autoplay)
+
 ## How to test all maps of the subject
 - Execute
    ```
