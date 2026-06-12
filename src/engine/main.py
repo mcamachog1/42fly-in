@@ -349,10 +349,13 @@ def main() -> None:
                 if index == 2:
                     print(
                         f"=== Total path cost & Avg turns per drone ===\n{s}")
-            option: int = int(input('Continue(1) - Quit(0): '))
-            if option == 0:
-                exit(0)
-
+            try:
+                option: int = int(input('Continue(1) - Quit(0): '))
+                if option == 0:
+                    exit(0)
+            except ValueError as e:
+                print(e)
+                exit(1)
 
 if __name__ == "__main__":
     main()

@@ -46,6 +46,10 @@ class CostedMap:
             if exclude:
                 if z1 in exclude or z2 in exclude:
                     continue
+            if self.network.lookup_hubs[z1].zone.name == ZoneType.BLOCKED.name:
+                continue
+            if self.network.lookup_hubs[z2].zone.name == ZoneType.BLOCKED.name:
+                continue
             if z1 == zone:
                 zones.append(z2)
             elif z2 == zone:

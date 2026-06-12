@@ -403,13 +403,29 @@ class MapParser():
             if zone['prefix'] == 'end_hub':
                 zone['max_drones'] = sys.maxsize
                 end_hub: str = zone['name']
-            hubs.append(Hub(**zone))
+            try:
+                hubs.append(Hub(**zone))
+            except ValidationError as e:
+                for error in e.errors():
+                    print(
+                        "CONSTRAINT ERROR: "
+                        f"{error['msg'].removeprefix('Value error, ')}"
+                    )
+                exit(1)                
 
         # Format input for connections objects
         connections: list[dict[str, Any]] = data['connections']
         connection_objects: list[Connection] = []
         for connection in connections:
-            connection_objects.append(Connection(**connection))
+            try:
+                connection_objects.append(Connection(**connection))
+            except ValidationError as e:
+                for error in e.errors():
+                    print(
+                        "CONSTRAINT ERROR: "
+                        f"{error['msg'].removeprefix('Value error, ')}"
+                    )
+                exit(1)                
 
         # Format input for map object
         map_input: dict[str, Any] = {}
