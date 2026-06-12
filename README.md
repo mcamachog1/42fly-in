@@ -42,7 +42,7 @@ The network topology and real-time drone movements are optionally rendered graph
 
 ## Input file example
 
-This is an example of a graphic network and the corresponding input network file configuration (.txt)
+This is an example of a graphical network and its corresponding network input configuration file  (.txt)
 
 ![Simple linear path network](assets/images/01_easy.png)
 
@@ -64,7 +64,7 @@ connection: waypoint2-goal
 
 ### Terminal Visualization
 
- A line lists all the drone movements that occur during each turn, space separated. Each movement follows the format: D`<ID>-<zone>`, or D`<ID>-<connection>` in case of drones still in flight toward restricted zones.
+ A single line lists all the drone movements that occur during each turn, space-separated. Each movement follows the format: D`<ID>-<zone>`, or D`<ID>-<connection>` in case of drones still in flight toward restricted zones.
 
 - D`<ID>` refers to the unique drone identifier (e.g., D1, D2).
 - `<zone>` is the name of the destination zone.
@@ -90,7 +90,7 @@ connection: waypoint2-goal
 
 ## How to show GUI
 
-Using a flag named **--gui-active** with the run rule, this flag name is given to an environment variable called **GUI_ACTIVE**
+By using a flag named **--gui-active** with the run rule, this flag value is passed to an environment variable called **GUI_ACTIVE**
 
 - Execute
    ```
@@ -134,51 +134,44 @@ By default the simulation executes the maps given in the subject, to execute a s
 This project relies on a combination of Python's Standard Library and external packages to manage routing optimization, data validation, and graphical rendering.
 
 ### 📦 External Packages (Require installation via `requirements.txt`)
-- **Pydantic:** An external data validation and settings management library. It is strictly used to enforce data models and ensure robust map parser validation.
-- **Pygame:** An external multimedia library used to render the real-time 2D graphical visualization of the simulation, nodes, and network connections.
-- **Flake8 & Mypy:** External code quality tools required by the project specifications to serve as linters and static type checkers.
+- **Pydantic:** A data validation and settings management library. It is strictly used to enforce data models and ensure robust map parser validation.
+- **Pygame:** A multimedia library used to render the real-time 2D graphical visualization of the simulation, nodes, and network connections.
+- **Flake8 & Mypy:** Code quality tools required by the project specifications to serve as linters and static type checkers.
 
 ### ⚙️ Python Standard Library (Native - No installation required)
-- **argparse:** A native CLI argument-parsing module used to capture terminal flags (such as `--gui-active`) to dynamically enable or disable the graphic visualizer.
-- **heapq:** A native module providing a binary heap algorithm. It serves as the heart of the core minimum-cost routing algorithm (Modified Dijkstra). It keeps path evaluation states sorted, ensuring that popping from the queue always yields the minimum-cost item (structured as tuples).
-- **re (Regular Expressions):** A native module used as an optimal solution for parsing flexible network configuration files. It provides a simple and feasible way to extract hub and connection metadata where the presence and quantity of attributes are variable.
+- **argparse:** A CLI argument-parsing module used to capture terminal flags (such as `--gui-active`) to dynamically enable or disable the graphic visualizer.
+- **heapq:** A module providing a binary heap algorithm. It serves as the heart of the core minimum-cost routing algorithm (Modified Dijkstra). It keeps path evaluation states sorted, ensuring that popping from the queue always yields the minimum-cost item (structured as tuples).
+- **re (Regular Expressions):** A module used as an optimal solution for parsing flexible network configuration files. It provides a simple and feasible way to extract hub and connection metadata where the presence and quantity of attributes are variable.
 
-### Use of AI
-- For decide the folder structure of the project
-- For learn how to put video and images in this README file
-- For documentation of function and classes according PEP 257
-- For learn how to use python heapq module
-- For review and improve my code
-- For select ANSI color codes
-- For get example for use of pygame library and manage events
+### 🤖 Use of AI
+
+- **Architecture & Structure:** Assisted in deciding and organizing the project's folder layout.
+- **Documentation & Standards:** Generated comprehensive docstrings for functions, classes, and models following PEP 257 standards and the Google Style Guide.
+- **Code Optimization & Bug Fixing:** Reviewed source code to improve scalability and resolved potential execution bugs.
+- **Algorithmic Analysis:** Validated, refined, and documented a custom variant of Dijkstra's pathfinding algorithm using Python's `heapq` module.
+- **Visuals & UI Design:** Provided guidance on mapping ANSI color escape sequences for clean terminal logs, and assisted with integrating the `pygame` library to handle window events, resizing behavior, and graphical rendering.
+- **Technical Context & Vocabulary:** Clarified specific technical terminology regarding graph theory and drone simulation metrics.
+- **Documentation Enhancements:** Provided guidance on embedding video assets and dynamic images natively within the project's README file.
 
 # 4. Algorithm (minimum cost)
+---
 
 The algorithm implements a modified variant of Dijkstra's algorithm using a Min-Heap (priority queue).
 
-    Exploration Data Structure (Heap): A list of tuples managed as a heap is used. The tuples are automatically maintained in ascending order based on their first element (the accumulated cost). The structure of each tuple is: (cost-to-get-objective-zone, objective-zone, path-until-objective-zone)
+- **Exploration Data Structure (Heap):** A list of tuples managed as a heap is used. The tuples are automatically maintained in ascending order based on their first element (the accumulated cost). The structure of each tuple is: (cost-to-get-objective-zone, objective-zone, path-until-objective-zone)
 
-    Optimal Routes Registry (Dictionary): A dictionary is used where the key is the destination_zone and the value is a tuple (minimum_cost, optimal_path). This dictionary acts as the official registry of the best routes found so far.
+- **Optimal Routes Registry (Dictionary):** A dictionary is used where the key is the destination_zone and the value is a tuple (minimum_cost, optimal_path). This dictionary acts as the official registry of the best routes found so far.
 
-    Initialization: The process begins by inserting the starting zone (start) into both the heap and the dictionary with a cost of 0 and a path containing only itself: [start].
+- **Initialization:** The process begins by inserting the starting zone (start) into both the heap and the dictionary with a cost of 0 and a path containing only itself: [start].
 
-Exploration Loop (Repeated until the heap is empty):
+- **Exploration Loop (Repeated until the heap is empty):**
 
-    The element with the lowest accumulated cost is extracted from the heap.
+The element with the lowest accumulated cost is extracted from the heap.
 
-    Obsolescence Filter: The cost of this extracted element is compared against the cost already registered in the dictionary for that same zone. If the heap cost is greater, it means a shorter path was already found previously, so this element is discarded (skipped).
+- **Obsolescence Filter:** The cost of this extracted element is compared against the cost already registered in the dictionary for that same zone. If the heap cost is greater, it means a shorter path was already found previously, so this element is discarded (skipped).
 
-    Neighbor Exploration: If the element is valid, its adjacent zones (neighbors) are retrieved, and for each neighbor:
+- **Neighbor Exploration:** If the element is valid, its adjacent zones (neighbors) are retrieved, and for each neighbor:
+    - The new_cost is calculated (current accumulated cost + cost of entering the neighbor zone) and a new path array is generated.
+    - If the neighbor has not been visited before, or if the new_cost is lower than the one stored in the dictionary, the dictionary is updated with the new optimal route, and the neighbor is pushed onto the heap to continue exploring from there.
 
-        The new_cost is calculated (current accumulated cost + cost of entering the neighbor zone) and a new path array is generated.
-
-        If the neighbor has not been visited before, or if the new_cost is lower than the one stored in the dictionary, the dictionary is updated with the new optimal route, and the neighbor is pushed onto the heap to continue exploring from there.
-
-        Tie-breaking Rule (PRIORITY): If the new_cost is exactly equal to the cost already recorded, the algorithm applies a custom criterion: if the neighboring zone is of type PRIORITY, it overwrites the previous path to favor routes passing through priority zones, and pushes it back onto the heap."
-        
-
-
-
-
-
-
+- **Tie-breaking Rule (PRIORITY):** If the new_cost is exactly equal to the cost already recorded, the algorithm applies a custom criterion: if the neighboring zone is of type PRIORITY, it overwrites the previous path to favor routes passing through priority zones, and pushes it back onto the heap.
